@@ -8,10 +8,22 @@ sourceCompatibility = 1.5
 
 repositories {
     mavenCentral()
+    maven{
+        url "http://clojars.org/repo"
+    }
 }
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.3.11'
+    // https://mvnrepository.com/artifact/jnetpcap/jnetpcap
+    compile group: 'jnetpcap', name: 'jnetpcap', version: '1.4.r1425-1f'
+
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
+
+
+    compile 'org.pcap4j:pcap4j-core:1.+'
+    compile 'org.pcap4j:pcap4j-packetfactory-static:1.+'
+
     testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.3'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
