@@ -54,62 +54,10 @@ public class Main {
          }
       }
 
-      for (TcpStream stream: streamArray.getStreams()){
-
-
-         System.out.println(stream);
-
-         TreeMap<Timestamp,MessageHolder> messages = new TreeMap<>();
-
-
-         for (RequestHolder httpRequest:stream.getClientRequests()){
-            //System.out.println(httpRequest.getHttpRequest().getRequestLine());
-
-            messages.put(httpRequest.getSequence(),httpRequest);
-         }
-
-         for (ResponseHolder httpResponse:stream.getServerResponses()){
-            //System.out.println(httpResponse.getHttpResponse().getEntity());
-            messages.put(httpResponse.getSequence(),httpResponse);
-         }
-
-
-         Iterator<MessageHolder> messageHolderIterator = messages.values().iterator();
-
-         Collection<HttpInteraction> interactions = new ArrayList<>();
-
-         ResponseHolder responseHolder = null;
-         RequestHolder requestHolder = null;
-
-
-
-         while (messageHolderIterator.hasNext()){
-            MessageHolder messageHolder = messageHolderIterator.next();
-
-            if (messageHolder instanceof RequestHolder)
-               requestHolder = (RequestHolder)messageHolder;
-
-            if (messageHolder instanceof ResponseHolder){
-               interactions.add(new HttpInteraction(requestHolder,(ResponseHolder)messageHolder));
-
-            }
-
-         }
-
-         interactions.forEach(System.out::println);
-
-
-      }
+      streamArray.getInteractions().forEach(System.out::println);
 
       handle.close();
    }
 
-   public static byte[] combineArrays(byte[] a, byte[] b){
-      int aLen = a.length;
-      int bLen = b.length;
-      byte[] c= new byte[aLen+bLen];
-      System.arraycopy(a, 0, c, 0, aLen);
-      System.arraycopy(b, 0, c, aLen, bLen);
-      return c;
-   }
+
 }
