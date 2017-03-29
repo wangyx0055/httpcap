@@ -1,0 +1,39 @@
+
+<div class="col-md-4">
+    <h4>Capturing from {{capture.interfaces.join(", ")}} on port: {{capture.port}}</h4>
+</div>
+<div class="col-md-8">
+    <h4>HTTP Traffic</h4>
+    <div class="row" style="width: 100%">
+        <div class="col-sm-2">
+            <strong>Method</strong>
+        </div>
+        <div class="col-sm-2">
+            <strong>Response</strong>
+        </div>
+        <div class="col-sm-8">
+            <strong>Path</strong>
+        </div>
+
+    </div>
+    <div class="h-scroll">
+
+        <div class="row" ng-repeat="conversation in capture.httpInteractions" ng-click="setConversation(conversation)" style="width: 100%" ng-class="{'bg-info':$index%2==0}">
+            <div class="col-sm-2">
+                <div class="text-success">
+                    {{conversation.request.method}}
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="text-success">
+                    {{conversation.response.status}}
+                </div>
+            </div>
+            <div class="col-sm-8">{{conversation.request.path}}</div>
+
+
+        </div>
+
+    </div>
+</div>
+

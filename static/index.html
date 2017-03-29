@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <style>
+            body { padding-top: 70px; }
+
+            .h-scroll {
+                height: 80vh; /* %-height of the viewport */
+                width: 100%;
+                overflow-y: scroll;
+            }
+        </style>
+        <script src="public/lib/jquery/dist/jquery.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="public/lib/codemirror/lib/codemirror.css">
+        <script type="text/javascript" src="public/lib/codemirror/lib/codemirror.js"></script>
+        <script type="text/javascript" src="public/lib/codemirror/mode/javascript/javascript.js"></script>
+
+        <script src="public/lib/angular/angular.min.js"></script>
+        <script src="public/lib/angular-resource/angular-resource.min.js"></script>
+        <script src="public/lib/angular-route/angular-route.min.js"></script>
+        <script type="text/javascript" src="public/lib/angular-ui-codemirror/ui-codemirror.js"></script>
+        <script src="public/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+
+
+        <script src="app.js"></script>
+
+        <link rel="stylesheet" href="public/lib/bootstrap/dist/css/bootstrap.min.css">
+    </head>
+    <body ng-app="schicwp.httpcap" >
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">HTTPcap</a>
+            </div>
+        </div>
+    </nav>
+
+        <div class="container container-fluid">
+            <ng-view></ng-view>
+
+        </div>
+    </body>
+</html>

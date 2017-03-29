@@ -33,6 +33,7 @@ public class TcpStreamArray {
 
 
 
+
       if (httpPacket.getTcpPacket().getHeader().getSyn()){
          System.out.println("Its a syn: " + httpPacket);
          System.out.println("Adding stream: " );
@@ -60,7 +61,6 @@ public class TcpStreamArray {
 
       TcpStream stream = streamCollection.stream()
             .filter(s -> s.belongsInStream(httpPacket )).findAny().orElse( null);
-
 
 
       if (httpPacket.getTcpPacket().getHeader().getAck()){

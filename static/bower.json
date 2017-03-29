@@ -1,0 +1,25 @@
+{
+  "name": "static",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "wschick <wschick@homeadvisor.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/schicwp/httpcap",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.6.3",
+    "angular-resource": "^1.6.3",
+    "bootstrap": "^3.3.7",
+    "angular-route": "^1.6.3",
+    "angular-ui-codemirror": "^0.3.0"
+  }
+}

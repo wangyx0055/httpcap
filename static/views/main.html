@@ -1,0 +1,40 @@
+<div class="col-md-6">
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Running Captures
+        </div>
+        <div class="panel-body">
+            <div ng-repeat="capture in captures">
+                <a href="#!/capture/{{capture.id}}">Capturing from {{capture.interfaces.join(", ")}} on port: {{capture.port}}</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="col-md-6">
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Start a new capture
+        </div>
+        <div class="panel-body">
+            <form>
+                <div class="form-group">
+                    <label >Network Interfaces</label>
+                    <select class="form-control" ng-options="item.name as item.description for item in interfaces" ng-model="formData.interfaces" multiple size="12"></select>
+                    <small id="emailHelp" class="form-text text-muted">Capturing on: {{formData.interface.join(", ")}}</small>
+                </div>
+                <div class="form-group">
+                    <label >Port</label>
+                    <input type="number" class="form-control" ng-model="formData.port"/>
+                </div>
+                <button class="btn btn-primary" ng-click="createCapture(formData)">Start</button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
