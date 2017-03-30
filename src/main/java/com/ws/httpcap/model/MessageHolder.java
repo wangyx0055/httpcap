@@ -8,7 +8,7 @@ import java.util.Comparator;
  */
 public interface MessageHolder{
 
-   abstract Timestamp getSequence();
+   abstract Long getSequence();
 
 
 }

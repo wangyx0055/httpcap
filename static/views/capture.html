@@ -37,3 +37,73 @@
     </div>
 </div>
 
+<div ng-if="conversation">
+    <h4>{{conversation.request.method}} {{conversation.request.path}}</h4>
+    <hr>
+    <div class="row" ng-if="conversation.request.query.length">
+        <h5>Parameters</h5><hr>
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Query Parameters
+                </div>
+                <div class="panel-body">
+                    <div class="row" ng-repeat="header in conversation.request.query" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
+                        <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
+                        <div class="col-sm-8"><small>{{header.value}}</small></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <h5>Headers</h5><hr>
+        <div class="col-md-6">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Request Headers
+                </div>
+                <div class="panel-body">
+                    <div class="row" ng-repeat="header in conversation.request.headers" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
+                        <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
+                        <div class="col-sm-8"><small>{{header.value}}</small></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Response Headers
+                </div>
+                <div class="panel-body">
+                    <div class="row" ng-repeat="header in conversation.response.headers" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
+                        <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
+                        <div class="col-sm-8"><small>{{header.value}}</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+        <h5>Content</h5><hr>
+        <div class="col-md-6">
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Response Body
+                </div>
+                <div class="panel-body">
+                    <ui-codemirror ng-model="responseBody" ui-codemirror-opts="editorOptions"></ui-codemirror>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

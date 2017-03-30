@@ -1,13 +1,13 @@
-package com.ws.httpcap.model;
+package com.ws.httpcap.model.tcp;
 
-import com.ws.httpcap.HttpPacket;
+import com.ws.httpcap.model.*;
+import com.ws.httpcap.model.http.HttpInteraction;
+import com.ws.httpcap.model.http.HttpParser;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 
 /**
  * Created by wschick on 3/22/17.
@@ -28,28 +28,30 @@ public class TcpStreamArray {
       this.serverPort = serverPort;
    }
 
-
-   public void addPacket(HttpPacket httpPacket){
-
+   int connectionCounter = 0;
 
 
+   public void addPacket(TcpPacketWrapper tcpPacketWrapper){
 
-      if (httpPacket.getTcpPacket().getHeader().getSyn()){
-         System.out.println("Its a syn: " + httpPacket);
+
+
+
+      if (tcpPacketWrapper.isSyn()){
+         System.out.println("Its a syn: " + tcpPacketWrapper);
          System.out.println("Adding stream: " );
          TcpStream tcpStream = new TcpStream(
-               httpPacket.getSrcPort(),
-               httpPacket.getDstPort(),
-               httpPacket.getSrcAddr(),
-               httpPacket.getDstAddr(),
-               httpPacket.getSquence()
+               tcpPacketWrapper.getSrcPort(),
+               tcpPacketWrapper.getDstPort(),
+               tcpPacketWrapper.getSrcAddr(),
+               tcpPacketWrapper.getDstAddr(),
+               tcpPacketWrapper.getSequence()
          );
          streamCollection.add(
                tcpStream
          );
 
-         if (httpPacket.getDstPort() == serverPort){
-            tcpConnections.add(new TcpConnection(tcpStream));
+         if (tcpPacketWrapper.getDstPort() == serverPort){
+            tcpConnections.add(new TcpConnection(connectionCounter++,tcpStream));
          } else {
             tcpConnections
                   .stream()
@@ -59,15 +61,39 @@ public class TcpStreamArray {
 
       }
 
+      if (!streamCollection.stream()
+            .filter(s -> s.belongsInStream(tcpPacketWrapper)).findAny().isPresent()){
+         System.out.println("Adding stream: " );
+         TcpStream tcpStream = new TcpStream(
+               tcpPacketWrapper.getSrcPort(),
+               tcpPacketWrapper.getDstPort(),
+               tcpPacketWrapper.getSrcAddr(),
+               tcpPacketWrapper.getDstAddr(),
+               tcpPacketWrapper.getSequence() -1
+         );
+         streamCollection.add(
+               tcpStream
+         );
+
+         if (tcpPacketWrapper.getDstPort() == serverPort){
+            tcpConnections.add(new TcpConnection(connectionCounter++,tcpStream));
+         } else {
+            tcpConnections
+                  .stream()
+                  .filter(c -> c.getServerInputStream().isPartner(tcpStream))
+                  .findAny().ifPresent(c -> c.setClientInputStream(tcpStream));
+         }
+      }
+
       TcpStream stream = streamCollection.stream()
-            .filter(s -> s.belongsInStream(httpPacket )).findAny().orElse( null);
+            .filter(s -> s.belongsInStream(tcpPacketWrapper)).findAny().orElse( null);
 
 
-      if (httpPacket.getTcpPacket().getHeader().getAck()){
-         if (httpPacket.getTcpPacket().getHeader().getSyn()){
-            System.out.println("Its a syn-ack: " + httpPacket);
+      if (tcpPacketWrapper.isAck()){
+         if (tcpPacketWrapper.isSyn()){
+            System.out.println("Its a syn-ack: " + tcpPacketWrapper);
          } else
-            System.out.println("Its a ack: " + httpPacket);
+            System.out.println("Its a ack: " + tcpPacketWrapper);
       }
 
       if (stream == null) {
@@ -78,22 +104,26 @@ public class TcpStreamArray {
 
 
 
-      if (httpPacket.hasData()) {
-         stream.addPacket(httpPacket);
-         System.out.println("Adding packet to stream: " + stream + " " + httpPacket);
+      if (tcpPacketWrapper.hasData()) {
+         stream.addPacket(tcpPacketWrapper);
+         System.out.println("Adding packet to stream: " + stream + " " + tcpPacketWrapper);
       }
-      if (httpPacket.isFin())
+      if (tcpPacketWrapper.isFin())
          stream.close();
 
    }
 
-   public Collection<HttpInteraction> getInteractions(){
+   public Collection<TcpConnection> getTcpConnections() {
+      return tcpConnections;
+   }
+
+  /* public Collection<HttpInteraction> getInteractions(){
 
       Collection<HttpInteraction> interactions = new ArrayList<>();
 
       for (TcpConnection tcpConnection:tcpConnections) {
 
-         TreeMap<Timestamp, MessageHolder> messages = new TreeMap<>();
+         TreeMap<Long, MessageHolder> messages = new TreeMap<>();
 
 
          for (RequestHolder httpRequest : httpParser.getClientRequests(tcpConnection.getServerInputStream().drawFromStream())) {
@@ -133,5 +163,5 @@ public class TcpStreamArray {
       }
 
       return interactions;
-   }
+   }*/
 }

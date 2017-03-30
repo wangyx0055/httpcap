@@ -1,4 +1,4 @@
-package com.ws.httpcap;
+package com.ws.httpcap.model.tcp;
 
 import org.pcap4j.packet.*;
 
@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 /**
  * Created by wschick on 11/17/16.
  */
-public class HttpPacket {
+public class TcpPacketWrapperImpl implements TcpPacketWrapper {
 
    //EthernetPacket ethernetPacket;
    IpPacket ipPacket;
@@ -16,7 +16,7 @@ public class HttpPacket {
    Timestamp timestamp;
    byte[] content;
 
-   public HttpPacket(Packet packet, Timestamp timestamp){
+   public TcpPacketWrapperImpl(Packet packet, Timestamp timestamp){
 
       this.timestamp = timestamp;
       ipPacket = (IpPacket)packet.getPayload();
@@ -25,56 +25,66 @@ public class HttpPacket {
          content = tcpPacket.getPayload().getRawData();
    }
 
+   @Override
    public boolean hasData(){
       return content != null;
    }
 
-
-   public boolean isDataPacket(){
-      return tcpPacket.getHeader().getPsh();
+   @Override
+   public boolean isSyn() {
+      return tcpPacket.getHeader().getSyn();
    }
 
-   public boolean isFin(){
-      return tcpPacket.getHeader().getFin() || tcpPacket.getHeader().getRst();
+   @Override
+   public boolean isAck() {
+      return tcpPacket.getHeader().getAck();
    }
 
-   public TcpPacket getTcpPacket() {
-      return tcpPacket;
+   @Override
+   public boolean isFin() {
+      return tcpPacket.getHeader().getFin();
    }
 
+   @Override
    public int getDstPort(){
       return tcpPacket.getHeader().getDstPort().valueAsInt();
    }
 
+   @Override
    public int getSrcPort(){
       return tcpPacket.getHeader().getSrcPort().valueAsInt();
    }
 
+   @Override
    public InetAddress getSrcAddr(){
       return ipPacket.getHeader().getSrcAddr();
    }
 
+   @Override
    public InetAddress getDstAddr(){
       return ipPacket.getHeader().getDstAddr();
    }
 
-   public long getSquence(){
+   @Override
+   public long getSequence(){
       return tcpPacket.getHeader().getSequenceNumberAsLong();
    }
 
+   @Override
    public byte[] getContent() {
       return content;
    }
 
 
-   public Timestamp getTimestamp() {
-      return timestamp;
+   @Override
+   public Long getTimestamp() {
+      return timestamp.getTime();
    }
 
    @Override
    public String toString() {
       return "Packet{" +
-            "seq=" + getSquence() +
+            "seq=" + getSequence() +
             ",src=" + getSrcPort() +
             ",dst=" + getDstPort() +
             ",len=" + (getContent() == null?"na":getContent().length) + "} " ;

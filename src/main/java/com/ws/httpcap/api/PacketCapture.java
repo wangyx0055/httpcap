@@ -1,6 +1,5 @@
 package com.ws.httpcap.api;
 
-import com.ws.httpcap.model.HttpInteraction;
 import com.ws.httpcap.model.PortType;
 
 import java.util.ArrayList;

@@ -1,9 +1,12 @@
 package com.ws.httpcap;
 
 import com.ws.httpcap.api.*;
-import com.ws.httpcap.model.HttpInteraction;
-import com.ws.httpcap.model.PortType;
-import com.ws.httpcap.model.TcpStreamArray;
+import com.ws.httpcap.model.http.HttpInteraction;
+import com.ws.httpcap.model.http.HttpMessageBuffer;
+import com.ws.httpcap.model.http.HttpParser;
+import com.ws.httpcap.model.tcp.TcpPacketWrapper;
+import com.ws.httpcap.model.tcp.TcpPacketWrapperImpl;
+import com.ws.httpcap.model.tcp.TcpStreamArray;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -43,78 +46,92 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
          byte[] bytes = new byte[0];
 
 
-         PcapHandle handle;
+         //PcapHandle handle;
 
 
          PcapNetworkInterface pcapNetworkInterface = Pcaps.getDevByName("lo0");
 
-         //handle = pcapNetworkInterface.openLive(8000, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 1000);
+         PcapHandle handle = pcapNetworkInterface.openLive(80000, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10000);
 
-         //handle.setFilter("tcp port 8080", BpfProgram.BpfCompileMode.OPTIMIZE);
+         handle.setFilter("tcp port 3000", BpfProgram.BpfCompileMode.OPTIMIZE);
 
-         handle = Pcaps.openOffline("capture.out", PcapHandle.TimestampPrecision.NANO);
-
-
-         TcpStreamArray streamArray = new TcpStreamArray(8080);
-
-         for (int i = 0; i < 400; i++) {
-            try {
-               Packet packet = handle.getNextPacketEx();
-               //System.out.println(handle.getTimestamp().getNanos());
-
-               HttpPacket httpPacket = new HttpPacket(packet, handle.getTimestamp());
-
-               streamArray.addPacket(httpPacket);
+         //handle = Pcaps.openOffline("capture.out", PcapHandle.TimestampPrecision.NANO);
 
 
-            } catch (TimeoutException e) {
-            } catch (EOFException e) {
-               System.out.println("EOF");
-               break;
+         TcpStreamArray streamArray = new TcpStreamArray(3000);
+
+         HttpMessageBuffer httpMessageBuffer = new HttpMessageBuffer(streamArray,new HttpParser());
+
+
+
+
+         new Thread(() ->{
+            while(true) {
+               try {
+                  Packet packet = handle.getNextPacketEx();
+                  //System.out.println(handle.getTimestamp().getNanos());
+
+                  TcpPacketWrapper tcpPacketWrapper = new TcpPacketWrapperImpl(packet, handle.getTimestamp());
+
+                  streamArray.addPacket(tcpPacketWrapper);
+
+                  List<HttpInteraction> httpInteractions = new ArrayList<>();
+
+                  httpInteractions.addAll(httpMessageBuffer.getHttpInteractions());
+
+                  packetCapture.getHttpInteractions().addAll(httpInteractions.stream().map(httpInteraction -> {
+
+                     ArrayList<NameValuePair> requestHeaders = new ArrayList<>();
+                     ArrayList<NameValuePair> responseHeaders = new ArrayList<>();
+
+                     for (Header header : httpInteraction.getRequestHolder().getHttpRequest().getAllHeaders()) {
+                        requestHeaders.add(new NameValuePair(header.getName(), header.getValue()));
+                     }
+
+                     for (Header header: httpInteraction.getResponseHolder().getHttpResponse().getAllHeaders()){
+                        responseHeaders.add(new NameValuePair(header.getName(),header.getValue()));
+                     }
+
+                     try {
+                        URI requestURI = new URI(httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getUri());
+
+                        HttpConversationRequest request = new HttpConversationRequest(
+                              httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getMethod(),
+                              requestURI.getPath(),
+                              URLEncodedUtils.parse(requestURI,"UTF-8").stream().map(p -> new NameValuePair(p.getName(),p.getValue())).collect(Collectors.toList()),
+                              requestHeaders
+                        );
+
+                        HttpConversationResponse reponse = new HttpConversationResponse(
+                              httpInteraction.getResponseHolder().getHttpResponse().getStatusLine().getStatusCode(),
+                              responseHeaders,
+                              read(httpInteraction.getResponseHolder().getHttpResponse().getEntity())
+                        );
+
+
+                        return new HttpConversation(UUID.randomUUID().toString(),request, reponse);
+                     }catch (Exception e){
+                        throw new RuntimeException(e);
+                     }
+
+
+                  }).collect(Collectors.toList()));
+
+
+               } catch (TimeoutException e) {
+               } catch (Exception e) {
+                  System.out.println("EOF");
+                  break;
+               }
             }
-         }
 
 
 
-         handle.close();
-
-         packetCapture.setHttpInteractions(streamArray.getInteractions().stream().map(httpInteraction -> {
-
-            ArrayList<NameValuePair> requestHeaders = new ArrayList<>();
-            ArrayList<NameValuePair> responseHeaders = new ArrayList<>();
-
-            for (Header header : httpInteraction.getRequestHolder().getHttpRequest().getAllHeaders()) {
-               requestHeaders.add(new NameValuePair(header.getName(), header.getValue()));
-            }
-
-            for (Header header: httpInteraction.getResponseHolder().getHttpResponse().getAllHeaders()){
-               responseHeaders.add(new NameValuePair(header.getName(),header.getValue()));
-            }
-
-            try {
-               URI requestURI = new URI(httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getUri());
-
-               HttpConversationRequest request = new HttpConversationRequest(
-                     httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getMethod(),
-                     requestURI.getPath(),
-                     URLEncodedUtils.parse(requestURI,"UTF-8").stream().map(p -> new NameValuePair(p.getName(),p.getValue())).collect(Collectors.toList()),
-                     requestHeaders
-               );
-
-               HttpConversationResponse reponse = new HttpConversationResponse(
-                     httpInteraction.getResponseHolder().getHttpResponse().getStatusLine().getStatusCode(),
-                     responseHeaders,
-                     read(httpInteraction.getResponseHolder().getHttpResponse().getEntity())
-               );
+            handle.close();
 
 
-               return new HttpConversation(UUID.randomUUID().toString(),request, reponse);
-            }catch (Exception e){
-               throw new RuntimeException(e);
-            }
+         }).start();
 
-
-         }).collect(Collectors.toList()));
 
          packetCapture.setId(currentId++);
 

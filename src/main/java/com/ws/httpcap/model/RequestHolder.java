@@ -9,10 +9,10 @@ import java.sql.Timestamp;
  */
 public class RequestHolder implements MessageHolder {
 
-   private final Timestamp sequence;
+   private final Long sequence;
    private final HttpRequest httpRequest;
 
-   public RequestHolder(Timestamp sequence, HttpRequest httpRequest) {
+   public RequestHolder(long sequence, HttpRequest httpRequest) {
       this.sequence = sequence;
       this.httpRequest = httpRequest;
    }
@@ -21,7 +21,7 @@ public class RequestHolder implements MessageHolder {
       return httpRequest;
    }
 
-   public Timestamp getSequence() {
+   public Long getSequence() {
       return sequence;
    }
 
