@@ -16,6 +16,12 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
     .factory("Interface",["$resource",function($resource){
         return $resource("/interface/:id")
     }])
+    .filter('startFrom', function() {
+        return function(input, start) {
+            start = +start; //parse to int
+            return input.slice(start);
+        }
+    })
 
     .controller("MainController",["$scope","PacketCapture","Interface",function($scope,PacketCapture,Interface){
         $scope.interfaces = Interface.query();
@@ -32,11 +38,23 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
     }])
     .controller("PacketListController",["$scope","PacketCapture","$routeParams",function($scope,PacketCapture,$routeParams){
-        $scope.capture = PacketCapture.get({id:$routeParams.id})
+
+        $scope.currentPage = 0;
+        $scope.pageSize = 10;
+
+
+        $scope.setPage = function(page){
+            $scope.currentPage = page;
+        }
+
+        $scope.capture = PacketCapture.get({id:$routeParams.id},function(){
+            console.log($scope.capture)
+            $scope.pages =  new Array(Math.ceil($scope.capture.httpInteractions.length/$scope.pageSize));
+        })
 
         $scope.setConversation = function(conversation){
             console.log(conversation)
-            $scope.conversation = conversation;
+            $scope.conversation  = conversation;
             $scope.responseBody = $scope.prettyPrint(conversation.response.body)
         }
 
@@ -50,8 +68,9 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
         $scope.editorOptions = {
             lineWrapping : true,
-            lineNumbers: false,
+            lineNumbers: true,
             readOnly: 'nocursor',
+            theme:"dracula",
             mode: 'text/javascript',
         };
     }]);

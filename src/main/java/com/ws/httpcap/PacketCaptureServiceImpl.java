@@ -18,16 +18,17 @@ import org.pcap4j.packet.Packet;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +40,17 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
    ConcurrentHashMap<Integer,PacketCapture> captures = new ConcurrentHashMap<>();
 
    int currentId = 0;
+
+   class TimedPacket{
+      public final Packet packet;
+      public final Timestamp timestamp;
+
+
+      TimedPacket(Packet packet, Timestamp timestamp) {
+         this.packet = packet;
+         this.timestamp = timestamp;
+      }
+   }
 
    @Override
    public int startCapture(PacketCapture packetCapture) {
@@ -62,16 +74,32 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
 
          HttpMessageBuffer httpMessageBuffer = new HttpMessageBuffer(streamArray,new HttpParser());
 
+         BlockingQueue<TimedPacket> packetQueue = new ArrayBlockingQueue<TimedPacket>(1000);
+
+         new Thread(()->{
+            while (true) {
+               try {
+                  Packet packet = handle.getNextPacketEx();
+                  Timestamp timestamp = handle.getTimestamp();
+
+                  packetQueue.add(new TimedPacket(packet,timestamp));
+               } catch (Exception e) {
+                  //e.printStackTrace();
+               }
+            }
+
+
+         }).start();
 
 
 
          new Thread(() ->{
             while(true) {
                try {
-                  Packet packet = handle.getNextPacketEx();
+                  TimedPacket packet = packetQueue.take();
                   //System.out.println(handle.getTimestamp().getNanos());
 
-                  TcpPacketWrapper tcpPacketWrapper = new TcpPacketWrapperImpl(packet, handle.getTimestamp());
+                  TcpPacketWrapper tcpPacketWrapper = new TcpPacketWrapperImpl(packet.packet, packet.timestamp);
 
                   streamArray.addPacket(tcpPacketWrapper);
 
@@ -117,17 +145,13 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
 
                   }).collect(Collectors.toList()));
 
-
-               } catch (TimeoutException e) {
                } catch (Exception e) {
+                  e.printStackTrace();
                   System.out.println("EOF");
                   break;
                }
             }
 
-
-
-            handle.close();
 
 
          }).start();

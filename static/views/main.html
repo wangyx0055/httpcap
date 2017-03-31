@@ -1,15 +1,45 @@
+
+<div class='page-header'>
+    <div class='btn-toolbar pull-right'>
+        <div class="btn-group">
+
+
+        </div>
+    </div>
+    <h3>HttpCap!</h3>
+    <p>Http Traffic Analyzer</p>
+</div>
 <div class="col-md-6">
+
 
     <div class="panel panel-default">
         <div class="panel-heading">
             Running Captures
         </div>
-        <div class="panel-body">
-            <div ng-repeat="capture in captures">
-                <a href="#!/capture/{{capture.id}}">Capturing from {{capture.interfaces.join(", ")}} on port: {{capture.port}}</a>
-            </div>
-        </div>
+        <ul class="list-group">
+            <li class="list-group-item clearfix" ng-repeat="capture in captures">
+                <a href="#!/capture/{{capture.id}}">Capturing from {{capture.interfaces.join(", ")}} on port:
+                    {{capture.port}}</a>
+                <div class="btn-group pull-right" role="group" aria-label="...">
+                    <a class="btn btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</a>
+                    <a class="btn btn-default"><span class="glyphicon glyphicon-refresh"></span> Restart</a>
+                </div>
+            </li>
+            <li class="list-group-item list-group-item-info" ng-if="!captures.length">
+                No captures are running on this machine right now.
+            </li>
+        </ul>
 
+
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Saved Captures
+        </div>
+        <ul class="list-group">
+            <li class="list-group-item list-group-item-info">You have no saved captures.</li>
+        </ul>
     </div>
 
 </div>
@@ -20,21 +50,49 @@
         <div class="panel-heading">
             Start a new capture
         </div>
-        <div class="panel-body">
+        <div class="panel-body clearfix">
             <form>
-                <div class="form-group">
-                    <label >Network Interfaces</label>
-                    <select class="form-control" ng-options="item.name as item.description for item in interfaces" ng-model="formData.interfaces" multiple size="12"></select>
-                    <small id="emailHelp" class="form-text text-muted">Capturing on: {{formData.interface.join(", ")}}</small>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Port</label>
+                            <input type="number" class="form-control" ng-model="formData.port"/>
+                            <small class="help-block">The server port to capture traffic from.</small>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label>Buffer Size</label>
+                            <select class="form-control" ng-model="formData.bufferSize">
+                                <option value="1024">1 MB</option>
+                                <option value="2048">2 MB</option>
+                                <option value="4096">4 MB</option>
+                                <option value="1024">8 MB</option>
+                                <option value="1024">16 MB</option>
+                            </select>
+                            <small class="help-block">This is the PCAP buffer size used.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Network Interfaces</label>
+                            <select class="form-control"
+                                    ng-options="item.name as item.description for item in interfaces"
+                                    ng-model="formData.interfaces" multiple size="12"></select>
+                            <small id="emailHelp" class="help-block">Capturing on: {{formData.interfaces.join(", ")}}
+                            </small>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="form-group">
-                    <label >Port</label>
-                    <input type="number" class="form-control" ng-model="formData.port"/>
-                </div>
-                <button class="btn btn-primary" ng-click="createCapture(formData)">Start</button>
+
+
+                <button class="btn btn-success btn-lg pull-right" ng-click="createCapture(formData)">Start it!</button>
             </form>
         </div>
 
     </div>
 
+</div>
 </div>

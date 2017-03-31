@@ -1,109 +1,64 @@
+<div ng-class="{'col-md-12':!c,'col-md-6':conversation}">
+    <div class='page-header'>
+        <div class='btn-toolbar pull-right'>
+            <div class="btn-group">
 
-<div class="col-md-4">
-    <h4>Capturing from {{capture.interfaces.join(", ")}} on port: {{capture.port}}</h4>
+                <a href="#!/" class="btn btn-danger"> <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                    Stop</a>
+                <a href="#!/" class="btn btn-default"> <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                    Home</a>
+            </div>
+        </div>
+        <h4>Capturing from {{capture.interfaces.join(", ")}} on port: {{capture.port}}</h4>
+    </div>
+
+
+    <table class="table table-striped table-condensed">
+        <thead>
+        <tr>
+            <th>Method</th>
+            <th>Response</th>
+            <th>Path</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="c in capture.httpInteractions | startFrom: 10*currentPage | limitTo: 10"
+            ng-click="setConversation(c)" ng-class="{info:c == conversation}">
+            <td>
+                <div class="http-badge method-{{c.request.method}}">
+                    {{c.request.method}}
+                </div>
+            </td>
+            <td>
+                <div class="http-badge response-{{c.response.status}}">
+                    {{c.response.status}}
+                </div>
+            </td>
+            <td>{{c.request.path}}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <ul class="pagination ">
+        <li>
+            <a ng-click="currentPage= currentPage -1" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        <li ng-repeat="i in pages track by $index" ng-class="{'active':currentPage == $index}"><a
+                ng-click="setPage($index)">{{ $index + 1 }}</a></li>
+        <li>
+            <a ng-click="currentPage= 1 + currentPage" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
 </div>
-<div class="col-md-8">
-    <h4>HTTP Traffic</h4>
-    <div class="row" style="width: 100%">
-        <div class="col-sm-2">
-            <strong>Method</strong>
-        </div>
-        <div class="col-sm-2">
-            <strong>Response</strong>
-        </div>
-        <div class="col-sm-8">
-            <strong>Path</strong>
-        </div>
 
-    </div>
-    <div class="h-scroll">
+<div ng-if="conversation" class="col-md-6" ng-init="pane='request'">
 
-        <div class="row" ng-repeat="conversation in capture.httpInteractions" ng-click="setConversation(conversation)" style="width: 100%" ng-class="{'bg-info':$index%2==0}">
-            <div class="col-sm-2">
-                <div class="text-success">
-                    {{conversation.request.method}}
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="text-success">
-                    {{conversation.response.status}}
-                </div>
-            </div>
-            <div class="col-sm-8">{{conversation.request.path}}</div>
+    <ng-include src="'views/conversation.html'"></ng-include>
 
-
-        </div>
-
-    </div>
-</div>
-
-<div ng-if="conversation">
-    <h4>{{conversation.request.method}} {{conversation.request.path}}</h4>
-    <hr>
-    <div class="row" ng-if="conversation.request.query.length">
-        <h5>Parameters</h5><hr>
-        <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Query Parameters
-                </div>
-                <div class="panel-body">
-                    <div class="row" ng-repeat="header in conversation.request.query" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
-                        <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
-                        <div class="col-sm-8"><small>{{header.value}}</small></div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <h5>Headers</h5><hr>
-        <div class="col-md-6">
-
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Request Headers
-                </div>
-                <div class="panel-body">
-                    <div class="row" ng-repeat="header in conversation.request.headers" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
-                        <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
-                        <div class="col-sm-8"><small>{{header.value}}</small></div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Response Headers
-                </div>
-                <div class="panel-body">
-                    <div class="row" ng-repeat="header in conversation.response.headers" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
-                        <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
-                        <div class="col-sm-8"><small>{{header.value}}</small></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <div class="row">
-        <h5>Content</h5><hr>
-        <div class="col-md-6">
-        </div>
-        <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Response Body
-                </div>
-                <div class="panel-body">
-                    <ui-codemirror ng-model="responseBody" ui-codemirror-opts="editorOptions"></ui-codemirror>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 
