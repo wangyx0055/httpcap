@@ -23,24 +23,28 @@
         </ul>
         <br>
 
-        <div ng-if="pane == 'headers'">
-            <div ng-repeat="header in conversation.request.headers" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
-                <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
-                <div class="col-sm-8"><small>{{header.value}}</small></div>
-            </div>
-        </div>
-        <div ng-if="pane == 'parameters'">
-            <div ng-repeat="header in conversation.request.query" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
-                <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
-                <div class="col-sm-8"><small>{{header.value}}</small></div>
-            </div>
-            <div class="alert alert-info" ng-if="!conversation.request.query.length">
-                No Request Parameters
-            </div>
-        </div>
+        <table ng-if="pane == 'headers'" class="table table-condensed">
+            <tr ng-repeat="header in conversation.request.headers" style="word-wrap: break-word">
+                <td class="col-sm-4"><small><strong>{{header.name}}</strong></small></td>
+                <td class="col-sm-8"><small>{{header.value}}</small></td>
+            </tr>
+        </table>
+        <table ng-if="pane == 'parameters'" class="table table-condensed">
+            <tr ng-repeat="header in conversation.request.query" style="word-wrap: break-word">
+                <td class="col-sm-4"><small><strong>{{header.name}}</strong></small></td>
+                <td class="col-sm-8"><small>{{header.value}}</small></td>
+            </tr>
+            <tr class="alert alert-info" ng-if="!conversation.request.query.length">
+                <td colspan="2">
+                    No Request Parameters
+                </td>
+
+            </tr>
+        </table>
         <div ng-if="pane == 'content'">
-            <div class="alert alert-info" ng-if="!conversation.request.content || conversation.request.content.length == 0">
-                No Request Content
+            <ui-codemirror ng-if="conversation.request.body" ng-model="requestBody" ui-codemirror-opts="editorOptions"></ui-codemirror>
+            <div class="alert alert-info" ng-if="!conversation.request.body">
+                No Request Body
             </div>
         </div>
 
@@ -53,12 +57,12 @@
         </ul>
         <br>
 
-        <div ng-if="pane == 'headers'">
-            <div ng-repeat="header in conversation.response.headers" ng-class="{'bg-info':$index%2 == 0 }" style="word-wrap: break-word">
-                <div class="col-sm-4"><small><strong>{{header.name}}</strong></small></div>
-                <div class="col-sm-8"><small>{{header.value}}</small></div>
-            </div>
-        </div>
+        <table ng-if="pane == 'headers'" class="table table-condensed">
+            <tr ng-repeat="header in conversation.response.headers" style="word-wrap: break-word">
+                <td class="col-sm-4"><small><strong>{{header.name}}</strong></small></td>
+                <td class="col-sm-8"><small>{{header.value}}</small></td>
+            </tr>
+        </table>
         <div ng-if="pane == 'content'">
             <ui-codemirror ng-model="responseBody" ui-codemirror-opts="editorOptions"></ui-codemirror>
         </div>

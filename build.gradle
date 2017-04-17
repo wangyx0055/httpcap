@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.springframework.boot:spring-boot-starter-websocket")
     compile 'org.codehaus.groovy:groovy-all:2.3.11'
     // https://mvnrepository.com/artifact/jnetpcap/jnetpcap
     compile group: 'jnetpcap', name: 'jnetpcap', version: '1.4.r1425-1f'

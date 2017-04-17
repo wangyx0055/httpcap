@@ -6,11 +6,14 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 /**
  * Created by wschick on 3/22/17.
  */
 public class TcpStream {
+
+   private static Logger logger = Logger.getLogger("TcpStream");
 
    final int srcPort;
    final int dstPort;
@@ -57,6 +60,9 @@ public class TcpStream {
 
       for (TcpPacketWrapper packetWrapper: tcpPacketWrappers)
          incomingPackets.remove(packetWrapper.getSequence());
+
+
+      logger.info("Removed [" + incomingPackets.size() + "] bytes from stream.");
 
 
       return tcpPacketWrappers;

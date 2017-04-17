@@ -1,6 +1,10 @@
 package com.ws.httpcap;
 
 import com.ws.httpcap.api.*;
+import com.ws.httpcap.capture.CaptureProcessingTask;
+import com.ws.httpcap.capture.CaptureState;
+import com.ws.httpcap.capture.PacketCollectionTask;
+import com.ws.httpcap.capture.TimedPacket;
 import com.ws.httpcap.model.http.HttpInteraction;
 import com.ws.httpcap.model.http.HttpMessageBuffer;
 import com.ws.httpcap.model.http.HttpParser;
@@ -15,6 +19,8 @@ import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.Packet;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -22,13 +28,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -37,127 +41,66 @@ import java.util.stream.Collectors;
 @Service
 public class PacketCaptureServiceImpl implements PacketCaptureService {
 
+   private static Logger logger = Logger.getLogger("PacketCaptureServiceImpl");
+
    ConcurrentHashMap<Integer,PacketCapture> captures = new ConcurrentHashMap<>();
 
    int currentId = 0;
 
-   class TimedPacket{
-      public final Packet packet;
-      public final Timestamp timestamp;
+
+   @Autowired
+   SimpMessageSendingOperations simpMessageSendingOperations;
 
 
-      TimedPacket(Packet packet, Timestamp timestamp) {
-         this.packet = packet;
-         this.timestamp = timestamp;
-      }
-   }
+   Map<Integer,CaptureState> captureStates = new ConcurrentHashMap<>();
 
    @Override
-   public int startCapture(PacketCapture packetCapture) {
+   public synchronized int startCapture(PacketCapture packetCapture) {
+
+      if (packetCapture.getPort() <=0 )
+         throw new RuntimeException("Capture port cannot be 0");
+
+      if (packetCapture.getInterfaces().size() <= 0)
+         throw new RuntimeException("Need at least one interface for capture");
+
       try {
-         byte[] bytes = new byte[0];
 
+         packetCapture.setId(currentId++);
 
-         //PcapHandle handle;
+         captureStates.put(packetCapture.getId(),new CaptureState());
 
-
-         PcapNetworkInterface pcapNetworkInterface = Pcaps.getDevByName("lo0");
-
-         PcapHandle handle = pcapNetworkInterface.openLive(80000, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10000);
-
-         handle.setFilter("tcp port 3000", BpfProgram.BpfCompileMode.OPTIMIZE);
-
-         //handle = Pcaps.openOffline("capture.out", PcapHandle.TimestampPrecision.NANO);
-
-
-         TcpStreamArray streamArray = new TcpStreamArray(3000);
-
-         HttpMessageBuffer httpMessageBuffer = new HttpMessageBuffer(streamArray,new HttpParser());
 
          BlockingQueue<TimedPacket> packetQueue = new ArrayBlockingQueue<TimedPacket>(1000);
 
-         new Thread(()->{
-            while (true) {
-               try {
-                  Packet packet = handle.getNextPacketEx();
-                  Timestamp timestamp = handle.getTimestamp();
+         packetCapture.getInterfaces().forEach( networkInterface -> {
 
-                  packetQueue.add(new TimedPacket(packet,timestamp));
-               } catch (Exception e) {
-                  //e.printStackTrace();
-               }
+            try {
+
+               logger.info("Starting collection on iface: " + networkInterface + " port: " + packetCapture.getPort());
+
+               PcapNetworkInterface pcapNetworkInterface = Pcaps.getDevByName(networkInterface);
+
+               PcapHandle handle = pcapNetworkInterface.openLive(80000, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 1000);
+
+               handle.setFilter("tcp port " + packetCapture.getPort(), BpfProgram.BpfCompileMode.OPTIMIZE);
+
+               captureStates.get(packetCapture.getId()).getCollectionThreads().add(
+                     new PacketCollectionTask(handle,packetQueue)
+                        .startCollection()
+               );
+
+            }catch (Exception ex){
+               ex.printStackTrace();
             }
 
+         });
 
-         }).start();
+         captureStates.get(packetCapture.getId()).setProcessingThread(
+               new CaptureProcessingTask(packetCapture, packetQueue, simpMessageSendingOperations)
+                     .startProcessing()
+         );
 
-
-
-         new Thread(() ->{
-            while(true) {
-               try {
-                  TimedPacket packet = packetQueue.take();
-                  //System.out.println(handle.getTimestamp().getNanos());
-
-                  TcpPacketWrapper tcpPacketWrapper = new TcpPacketWrapperImpl(packet.packet, packet.timestamp);
-
-                  streamArray.addPacket(tcpPacketWrapper);
-
-                  List<HttpInteraction> httpInteractions = new ArrayList<>();
-
-                  httpInteractions.addAll(httpMessageBuffer.getHttpInteractions());
-
-                  packetCapture.getHttpInteractions().addAll(httpInteractions.stream().map(httpInteraction -> {
-
-                     ArrayList<NameValuePair> requestHeaders = new ArrayList<>();
-                     ArrayList<NameValuePair> responseHeaders = new ArrayList<>();
-
-                     for (Header header : httpInteraction.getRequestHolder().getHttpRequest().getAllHeaders()) {
-                        requestHeaders.add(new NameValuePair(header.getName(), header.getValue()));
-                     }
-
-                     for (Header header: httpInteraction.getResponseHolder().getHttpResponse().getAllHeaders()){
-                        responseHeaders.add(new NameValuePair(header.getName(),header.getValue()));
-                     }
-
-                     try {
-                        URI requestURI = new URI(httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getUri());
-
-                        HttpConversationRequest request = new HttpConversationRequest(
-                              httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getMethod(),
-                              requestURI.getPath(),
-                              URLEncodedUtils.parse(requestURI,"UTF-8").stream().map(p -> new NameValuePair(p.getName(),p.getValue())).collect(Collectors.toList()),
-                              requestHeaders
-                        );
-
-                        HttpConversationResponse reponse = new HttpConversationResponse(
-                              httpInteraction.getResponseHolder().getHttpResponse().getStatusLine().getStatusCode(),
-                              responseHeaders,
-                              read(httpInteraction.getResponseHolder().getHttpResponse().getEntity())
-                        );
-
-
-                        return new HttpConversation(UUID.randomUUID().toString(),request, reponse);
-                     }catch (Exception e){
-                        throw new RuntimeException(e);
-                     }
-
-
-                  }).collect(Collectors.toList()));
-
-               } catch (Exception e) {
-                  e.printStackTrace();
-                  System.out.println("EOF");
-                  break;
-               }
-            }
-
-
-
-         }).start();
-
-
-         packetCapture.setId(currentId++);
+         packetCapture.setRunning(true);
 
          captures.put(packetCapture.getId(),packetCapture);
 
@@ -169,18 +112,13 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
       }
    }
 
-   public static String read(HttpEntity input)  {
-
-      try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input.getContent()))) {
-         return buffer.lines().collect(Collectors.joining("\n"));
-      }catch (IOException e){
-         throw new RuntimeException(e);
-      }
-   }
 
    @Override
-   public void stopCapture(int id) {
-
+   public synchronized void stopCapture(int id) {
+      if (captureStates.containsKey(id)) {
+         captureStates.get(id).shutdown();
+         captureStates.remove(id);
+      }
    }
 
    @Override
@@ -191,6 +129,12 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
    @Override
    public Collection<PacketCapture> getCaptures() {
       return captures.values();
+   }
+
+   @Override
+   public void deleteCapture(int captureId) {
+      stopCapture(captureId);
+      captures.remove(captureId);
    }
 
    @Override

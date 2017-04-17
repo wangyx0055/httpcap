@@ -22,5 +22,5 @@ public interface PacketCaptureService {
 
     List<NetworkInterface> getNetworkInterfaceNames();
 
-
+    void deleteCapture(int captureId);
 }

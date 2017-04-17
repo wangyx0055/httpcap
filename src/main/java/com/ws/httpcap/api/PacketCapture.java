@@ -16,6 +16,7 @@ public class PacketCapture {
     List<String> interfaces = new ArrayList<>();
 
 
+    boolean running;
 
     String remoteHost;
     PortType portType;
@@ -67,6 +68,14 @@ public class PacketCapture {
 
     public void setInterfaces(List<String> interfaces) {
         this.interfaces = interfaces;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }
 

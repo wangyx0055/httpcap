@@ -37,7 +37,7 @@ public class TcpStreamArray {
 
 
       if (tcpPacketWrapper.isSyn()){
-         System.out.println("Its a syn: " + tcpPacketWrapper);
+        // System.out.println("Its a syn: " + tcpPacketWrapper);
          System.out.println("Adding stream: " );
          TcpStream tcpStream = new TcpStream(
                tcpPacketWrapper.getSrcPort(),
@@ -63,7 +63,7 @@ public class TcpStreamArray {
 
       if (!streamCollection.stream()
             .filter(s -> s.belongsInStream(tcpPacketWrapper)).findAny().isPresent()){
-         System.out.println("Adding stream: " );
+         System.out.println("Adding existing stream: " );
          TcpStream tcpStream = new TcpStream(
                tcpPacketWrapper.getSrcPort(),
                tcpPacketWrapper.getDstPort(),
@@ -91,9 +91,9 @@ public class TcpStreamArray {
 
       if (tcpPacketWrapper.isAck()){
          if (tcpPacketWrapper.isSyn()){
-            System.out.println("Its a syn-ack: " + tcpPacketWrapper);
-         } else
-            System.out.println("Its a ack: " + tcpPacketWrapper);
+          //  System.out.println("Its a syn-ack: " + tcpPacketWrapper);
+         } else {}
+          //  System.out.println("Its a ack: " + tcpPacketWrapper);
       }
 
       if (stream == null) {

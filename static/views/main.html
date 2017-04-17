@@ -1,4 +1,5 @@
 
+<div class=" text-center">
 <div class='page-header'>
     <div class='btn-toolbar pull-right'>
         <div class="btn-group">
@@ -6,8 +7,9 @@
 
         </div>
     </div>
-    <h3>HttpCap!</h3>
+    <!--h3>HttpCap! </h3-->
     <p>Http Traffic Analyzer</p>
+</div>
 </div>
 <div class="col-md-6">
 
@@ -20,9 +22,9 @@
             <li class="list-group-item clearfix" ng-repeat="capture in captures">
                 <a href="#!/capture/{{capture.id}}">Capturing from {{capture.interfaces.join(", ")}} on port:
                     {{capture.port}}</a>
-                <div class="btn-group pull-right" role="group" aria-label="...">
-                    <a class="btn btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</a>
-                    <a class="btn btn-default"><span class="glyphicon glyphicon-refresh"></span> Restart</a>
+                <div class="btn-group pull-right" role="group" aria-label="...">\
+                    <a class="btn btn-warning" ng-click="stopCapture(capture)" ng-if="capture.running"><span class="glyphicon glyphicon-stop"></span> Stop</a>
+                    <a class="btn btn-danger" ng-click="deleteCapture(capture)" ng-if="!capture.running"><span class="glyphicon glyphicon-remove"></span> Remove</a>
                 </div>
             </li>
             <li class="list-group-item list-group-item-info" ng-if="!captures.length">
@@ -33,14 +35,14 @@
 
     </div>
 
-    <div class="panel panel-default">
+    <!--div class="panel panel-default">
         <div class="panel-heading">
             Saved Captures
         </div>
         <ul class="list-group">
             <li class="list-group-item list-group-item-info">You have no saved captures.</li>
         </ul>
-    </div>
+    </div-->
 
 </div>
 

@@ -46,6 +46,24 @@ public class PacketCaptureController {
 
    }
 
+   @RequestMapping(path = "/capture/{captureId}", method = RequestMethod.PUT)
+   PacketCapture stopCapture(@PathVariable("captureId") int captureId,@RequestBody PacketCapture capture){
+
+      if (!capture.isRunning()) {
+         packetCaptureService.stopCapture(captureId);
+         packetCaptureService.getCapture(captureId).setRunning(false);
+      }
+
+      return capture;
+   }
+
+   @RequestMapping(path = "/capture/{captureId}", method = RequestMethod.DELETE)
+   void deleteCapture(@PathVariable("captureId") int captureId){
+
+      packetCaptureService.deleteCapture(captureId);
+
+   }
+
    @RequestMapping(path = "/interface")
    List<NetworkInterface> listInterfaces(){
       return packetCaptureService.getNetworkInterfaceNames();
