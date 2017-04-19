@@ -15,7 +15,6 @@ public class PacketParser {
    private static Logger logger = Logger.getLogger("HttpParser");
 
    public interface ParseFunction<T>{
-
       T parse(Buffer buffer, Long timestamp) throws Exception;
    }
 
@@ -35,7 +34,7 @@ public class PacketParser {
             timestamp = tcpPacketWrapper.getTimestamp();
          }
 
-         bytes = combineArrays(bytes, tcpPacketWrapper.getContent());
+         bytes = concatenateArrays(bytes, tcpPacketWrapper.getContent());
 
          Buffer buffer = new Buffer(bytes);
 
@@ -48,7 +47,7 @@ public class PacketParser {
 
          allConsumedPackets.addAll(consumedPacketsForMessage);
          consumedPacketsForMessage.clear();
-         bytes = copyRemainingBytes(buffer);
+         bytes = extractRemainingBytes(buffer);
          timestamp = null;
       }
 
@@ -57,7 +56,7 @@ public class PacketParser {
       return result;
    }
 
-   private byte[] copyRemainingBytes(Buffer buffer) {
+   private static byte[] extractRemainingBytes(Buffer buffer) {
       try {
          byte[] bytes;
          bytes = new byte[Math.max(0, buffer.available())];
@@ -72,7 +71,7 @@ public class PacketParser {
       }
    }
 
-   public static byte[] combineArrays(byte[] a, byte[] b){
+   private static byte[] concatenateArrays(byte[] a, byte[] b){
       int aLen = a.length;
       int bLen = b.length;
       byte[] c= new byte[aLen+bLen];
