@@ -70,4 +70,3 @@ task installBowerComponents(type: NodeTask,dependsOn:appNpmInstall){
 }
 
 build.dependsOn(installBowerComponents)
-run.dependsOn(installBowerComponents)
