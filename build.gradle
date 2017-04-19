@@ -1,3 +1,17 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
+    }
+}
+
+plugins {
+    id "com.moowork.node" version "1.1.1"
+}
+
 group 'com.ws'
 version '1.0-SNAPSHOT'
 
@@ -11,14 +25,6 @@ mainClassName = "com.ws.httpcap.Main"
 
 sourceCompatibility = 1.8
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
-    }
-}
 
 repositories {
     mavenCentral()
@@ -44,3 +50,24 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
 }
+
+node {
+    download = true
+}
+
+task appNpmInstall(type: NpmTask) {
+    description = "Installs dependencies from package.json"
+    workingDir = file("${project.projectDir}/static")
+    args = ['install']
+}
+
+task installBowerComponents(type: NodeTask,dependsOn:appNpmInstall){
+    description = "Installs dependencies using Bower"
+    script = file("${project.projectDir}/static/node_modules/bower/bin/bower")
+    workingDir = file("${project.projectDir}/static")
+    args = ['install']
+
+}
+
+build.dependsOn(installBowerComponents)
+run.dependsOn(installBowerComponents)
