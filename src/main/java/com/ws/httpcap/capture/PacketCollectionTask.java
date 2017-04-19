@@ -36,7 +36,7 @@ public class PacketCollectionTask extends Thread {
 
             packetQueue.add(new TimedPacket(packet, timestamp));
          } catch (Exception e) {
-            //e.printStackTrace();
+            logger.fine("Error collecting packets: " + e);
          }
       }
 

@@ -5,7 +5,10 @@
             <a ng-click="setConversation(null)" class="btn btn-default" ><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Close</a>
         </div>
     </div>
-    <h4>{{conversation.request.method}} {{conversation.request.path}}</h4>
+    <h4>
+        <ng-include src="'views/method-badge.html'" ng-init="method = conversation.request.method"></ng-include>
+        {{conversation.request.path}} -
+        <ng-include src="'views/status-badge.html'" ng-init="status = conversation.response.status"></ng-include></h4>
 </div>
 <ul class="nav nav-tabs">
     <li ng-class="{active: pane == 'request'}"><a ng-click="pane = 'request'">Request</a></li>
@@ -29,23 +32,22 @@
                 <td class="col-sm-8"><small>{{header.value}}</small></td>
             </tr>
         </table>
-        <table ng-if="pane == 'parameters'" class="table table-condensed">
-            <tr ng-repeat="header in conversation.request.query" style="word-wrap: break-word">
-                <td class="col-sm-4"><small><strong>{{header.name}}</strong></small></td>
-                <td class="col-sm-8"><small>{{header.value}}</small></td>
-            </tr>
-            <tr class="alert alert-info" ng-if="!conversation.request.query.length">
-                <td colspan="2">
-                    No Request Parameters
-                </td>
-
-            </tr>
-        </table>
-        <div ng-if="pane == 'content'">
-            <ui-codemirror ng-if="conversation.request.body" ng-model="requestBody" ui-codemirror-opts="editorOptions"></ui-codemirror>
-            <div class="alert alert-info" ng-if="!conversation.request.body">
-                No Request Body
+        <div ng-if="pane == 'parameters'">
+            <div class="alert alert-warning text-center" ng-if="!conversation.request.query.length">
+                No Parameters
             </div>
+
+            <table  class="table table-condensed">
+                <tr ng-repeat="header in conversation.request.query" style="word-wrap: break-word">
+                    <td class="col-sm-4"><small><strong>{{header.name}}</strong></small></td>
+                    <td class="col-sm-8"><small>{{header.value}}</small></td>
+                </tr>
+            </table>
+
+        </div>
+
+        <div ng-if="pane == 'content'">
+            <content-window message="conversation.request"></content-window>
         </div>
 
     </div>
@@ -64,7 +66,7 @@
             </tr>
         </table>
         <div ng-if="pane == 'content'">
-            <ui-codemirror ng-model="responseBody" ui-codemirror-opts="editorOptions"></ui-codemirror>
+            <content-window message="conversation.response"></content-window>
         </div>
 
     </div>

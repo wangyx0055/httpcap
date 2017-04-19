@@ -1,13 +1,11 @@
 package com.ws.httpcap.model.http;
 
-import com.ws.httpcap.model.MessageHolder;
-import com.ws.httpcap.model.RequestHolder;
-import com.ws.httpcap.model.ResponseHolder;
 import com.ws.httpcap.model.tcp.TcpConnection;
 import com.ws.httpcap.model.tcp.TcpPacketWrapper;
 import com.ws.httpcap.model.tcp.TcpStreamArray;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by wschick on 3/30/17.
@@ -21,7 +19,7 @@ public class HttpMessageBuffer {
 
    final Map<Integer,List<TcpPacketWrapper>> clientBuffers = new HashMap<>();
    final Map<Integer,List<TcpPacketWrapper>> serverBuffers = new HashMap<>();
-   final Map<Integer,TreeMap<Long, MessageHolder>> messages = new TreeMap<>();
+   final Map<Integer,List<HttpTimedMessage>> messages = new TreeMap<>();
 
    public HttpMessageBuffer(TcpStreamArray tcpStreamArray, HttpParser httpParser) {
       this.tcpStreamArray = tcpStreamArray;
@@ -38,7 +36,7 @@ public class HttpMessageBuffer {
             serverBuffers.put(tcpConnection.getId(),new ArrayList<>());
 
          if (!messages.containsKey(tcpConnection.getId()))
-            messages.put(tcpConnection.getId(),new TreeMap<>());
+            messages.put(tcpConnection.getId(),new ArrayList<>());
 
          if (tcpConnection.getClientInputStream() != null)
             clientBuffers.get(tcpConnection.getId()).addAll(tcpConnection.getClientInputStream().drawFromStream());
@@ -48,42 +46,61 @@ public class HttpMessageBuffer {
       List<HttpInteraction> interactions = new ArrayList<>();
 
       for (int connectionId: messages.keySet()){
-         TreeMap<Long, MessageHolder> messageForStream = messages.get(connectionId);
+         List<HttpTimedMessage> messageForStream = messages.get(connectionId);
 
-         for (MessageHolder messageHolder: httpParser.getClientRequests(serverBuffers.get(connectionId))){
-            messageForStream.put(messageHolder.getSequence(),messageHolder);
-         }
+         messageForStream.addAll(
+               httpParser.getClientRequests(
+                     serverBuffers.get(connectionId)).stream().collect(Collectors.toList()
+               )
+         );
 
-         for (MessageHolder messageHolder:httpParser.getServerResponses(clientBuffers.get(connectionId))){
-            messageForStream.put(messageHolder.getSequence(),messageHolder);
-         }
+         messageForStream.addAll(
+               httpParser.getServerResponses(
+                     clientBuffers.get(connectionId)).stream().collect(Collectors.toList()
+               )
+         );
 
-         Iterator<MessageHolder> messageHolderIterator = messageForStream.values().iterator();
+         Collections.sort(messageForStream,(a,b) ->{
+
+            if (a.getTimestamp() > b.getTimestamp())
+               return 1;
+            else if (a.getTimestamp() < b.getTimestamp())
+               return -1;
+            else {
+               if (a instanceof HttpTimedRequest){
+                  return -1;
+               }
+
+               return 1;
+            }
+
+         });
+
+         Iterator<HttpTimedMessage> messageHolderIterator = messageForStream.iterator();
 
 
-         RequestHolder requestHolder = null;
+         HttpTimedRequest httpTimedRequest = null;
 
-         List<Long> messagesToRemove = new ArrayList<>();
+         List<HttpTimedMessage> messagesToRemove = new ArrayList<>();
 
          while (messageHolderIterator.hasNext()) {
-            MessageHolder messageHolder = messageHolderIterator.next();
+            HttpTimedMessage httpTimedMessage = messageHolderIterator.next();
 
-            if (messageHolder instanceof RequestHolder)
-               requestHolder = (RequestHolder) messageHolder;
+            if (httpTimedMessage instanceof HttpTimedRequest)
+               httpTimedRequest = (HttpTimedRequest) httpTimedMessage;
 
-            if (messageHolder instanceof ResponseHolder) {
-               interactions.add(new HttpInteraction("a,",requestHolder, (ResponseHolder) messageHolder));
-               if (requestHolder != null)
-                  messagesToRemove.add(requestHolder.getSequence());
+            if (httpTimedMessage instanceof HttpTimedResponse) {
+               interactions.add(new HttpInteraction("a,", httpTimedRequest, (HttpTimedResponse) httpTimedMessage));
+               if (httpTimedRequest != null)
+                  messagesToRemove.add(httpTimedRequest);
 
-               messagesToRemove.add(messageHolder.getSequence());
+               messagesToRemove.add(httpTimedMessage);
 
             }
 
          }
 
-         for (Long timestamp: messagesToRemove)
-            messageForStream.remove(timestamp);
+         messageForStream.removeAll(messagesToRemove);
 
       }
 

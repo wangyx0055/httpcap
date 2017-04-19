@@ -1,7 +1,5 @@
 package com.ws.httpcap.api;
 
-import com.ws.httpcap.model.PortType;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,11 +13,8 @@ public class PacketCapture {
     int port;
     List<String> interfaces = new ArrayList<>();
 
-
     boolean running;
 
-    String remoteHost;
-    PortType portType;
     Collection<HttpConversation> httpInteractions  = new ArrayList<>();
 
     public int getPort() {
@@ -28,22 +23,6 @@ public class PacketCapture {
 
     public void setPort(int port) {
         this.port = port;
-    }
-
-    public String getRemoteHost() {
-        return remoteHost;
-    }
-
-    public void setRemoteHost(String remoteHost) {
-        this.remoteHost = remoteHost;
-    }
-
-    public PortType getPortType() {
-        return portType;
-    }
-
-    public void setPortType(PortType portType) {
-        this.portType = portType;
     }
 
     public Collection<HttpConversation> getHttpInteractions() {

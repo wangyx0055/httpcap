@@ -1,4 +1,4 @@
-package com.ws.httpcap;
+package com.ws.httpcap.model.http;
 
 import org.apache.http.io.HttpTransportMetrics;
 import org.apache.http.io.SessionInputBuffer;

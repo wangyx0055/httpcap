@@ -42,17 +42,12 @@ import java.util.stream.Collectors;
 public class PacketCaptureServiceImpl implements PacketCaptureService {
 
    private static Logger logger = Logger.getLogger("PacketCaptureServiceImpl");
-
-   ConcurrentHashMap<Integer,PacketCapture> captures = new ConcurrentHashMap<>();
-
-   int currentId = 0;
-
+   private final ConcurrentHashMap<Integer,PacketCapture> captures = new ConcurrentHashMap<>();
+   private int currentId = 0;
+   private final Map<Integer,CaptureState> captureStates = new ConcurrentHashMap<>();
 
    @Autowired
-   SimpMessageSendingOperations simpMessageSendingOperations;
-
-
-   Map<Integer,CaptureState> captureStates = new ConcurrentHashMap<>();
+   CaptureNotificationService captureNotificationService;
 
    @Override
    public synchronized int startCapture(PacketCapture packetCapture) {
@@ -96,7 +91,7 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
          });
 
          captureStates.get(packetCapture.getId()).setProcessingThread(
-               new CaptureProcessingTask(packetCapture, packetQueue, simpMessageSendingOperations)
+               new CaptureProcessingTask(packetCapture, packetQueue, captureNotificationService)
                      .startProcessing()
          );
 

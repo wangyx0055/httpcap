@@ -1,4 +1,4 @@
-package com.ws.httpcap.model;
+package com.ws.httpcap.model.http;
 
 import java.sql.Timestamp;
 import java.util.Comparator;
@@ -6,9 +6,9 @@ import java.util.Comparator;
 /**
  * Created by wschick on 3/22/17.
  */
-public interface MessageHolder{
+public interface HttpTimedMessage {
 
-   abstract Long getSequence();
+   Long getTimestamp();
 
 
 }

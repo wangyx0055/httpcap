@@ -49,7 +49,7 @@ public class TcpStream {
 
       for (TcpPacketWrapper packet:incomingPackets.values()){
          if (sequence != packet.getSequence()) {
-            System.out.println("Out of sequence");
+            logger.warning("Out of sequence packet: " + packet);
             break;
          }
 
@@ -62,7 +62,7 @@ public class TcpStream {
          incomingPackets.remove(packetWrapper.getSequence());
 
 
-      logger.info("Removed [" + incomingPackets.size() + "] bytes from stream.");
+      logger.fine("Removed [" + incomingPackets.size() + "] bytes from stream.");
 
 
       return tcpPacketWrappers;

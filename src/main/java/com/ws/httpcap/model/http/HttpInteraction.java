@@ -1,30 +1,27 @@
 package com.ws.httpcap.model.http;
 
-import com.ws.httpcap.model.RequestHolder;
-import com.ws.httpcap.model.ResponseHolder;
-
 /**
  * Created by wschick on 3/22/17.
  */
 public class HttpInteraction {
 
-   final RequestHolder requestHolder;
-   final ResponseHolder responseHolder;
+   final HttpTimedRequest httpTimedRequest;
+   final HttpTimedResponse httpTimedResponse;
    final String id;
 
 
-   public HttpInteraction(String id,RequestHolder requestHolder, ResponseHolder responseHolder) {
+   public HttpInteraction(String id, HttpTimedRequest httpTimedRequest, HttpTimedResponse httpTimedResponse) {
       this.id = id;
-      this.requestHolder = requestHolder;
-      this.responseHolder = responseHolder;
+      this.httpTimedRequest = httpTimedRequest;
+      this.httpTimedResponse = httpTimedResponse;
    }
 
-   public RequestHolder getRequestHolder() {
-      return requestHolder;
+   public HttpTimedRequest getHttpTimedRequest() {
+      return httpTimedRequest;
    }
 
-   public ResponseHolder getResponseHolder() {
-      return responseHolder;
+   public HttpTimedResponse getHttpTimedResponse() {
+      return httpTimedResponse;
    }
 
    public String getId() {
@@ -34,8 +31,8 @@ public class HttpInteraction {
    @Override
    public String toString() {
       return "HttpInteraction{" +
-            "requestHolder=" + requestHolder +
-            ", responseHolder=" + responseHolder +
+            "httpTimedRequest=" + httpTimedRequest +
+            ", httpTimedResponse=" + httpTimedResponse +
             '}';
    }
 }

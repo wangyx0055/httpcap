@@ -27,16 +27,61 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
                 return input;
         }
     })
-    .factory("conversationListener",["$rootScope",function($rootScope){
-        var socket = new SockJS('/gs-guide-websocket');
+    .directive("contentWindow",function(){
+        return {
+            templateUrl:"views/content-window.html",
+            restrict: 'E',
+            scope:{
+                message:'='
+            },
+            controller:["$scope",function($scope){
+
+
+                var prettyPrint = function(json){
+                    try {
+                        return JSON.stringify(JSON.parse(json), null, 2)
+                    }catch (e){
+                        return json;
+                    }
+                }
+
+                $scope.editorOptions = {
+                    lineWrapping : true,
+                    lineNumbers: true,
+                    readOnly: 'nocursor',
+                    theme:"dracula",
+                    mode: 'text/javascript',
+                };
+
+                $scope.$watch("message",function(message){
+                    console.log(message)
+
+                    if (!message)
+                        return;
+
+                    message.headers.forEach(function(header){
+                        if (header.name == "Content-Type"){
+                            $scope.editorOptions.mode = header.value.split(";")[0]
+                            console.log("Content type: " + $scope.editorOptions.mode)
+                        }
+                    })
+
+                    if (message.body)
+                        $scope.body = prettyPrint(message.body)
+                    else
+                        $scope.body = null;
+                })
+            }]
+        }
+    })
+    .factory("conversationListener",["$rootScope","$timeout",function($rootScope,$timeout){
+
 
         var subscriptions = [];
 
-        var client = Stomp.over(socket);
+        var client;
 
         var connected = false;
-
-
 
         var makeSubscription = function(subscription){
             subscription.subscription = client.subscribe("/capture/" + subscription.captureId,function(e){
@@ -49,19 +94,28 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
             });
         }
 
-        client.connect({},function(){
+        var connect = function() {
 
-            subscriptions.forEach(function(subscription){
-                if (!subscription.subscription)
-                    makeSubscription(subscription)
-            })
+            console.log("Connecting....")
+            var socket = new SockJS('/gs-guide-websocket');
+            client = Stomp.over(socket);
 
-            connected = true;
+            client.connect({}, function () {
 
-        },function(m){
-            connected = false;
-            console.log(m)
-        });
+                subscriptions.forEach(function (subscription) {
+                        makeSubscription(subscription)
+                })
+
+                connected = true;
+
+            }, function (m) {
+                connected = false;
+                console.log(m)
+                $timeout(connect,500)
+            });
+        }
+
+        connect()
 
         return {
             subscribe:function(captureId, callback){
@@ -79,8 +133,6 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
             },
             unsubscribe:function(captureId){
 
-
-
                 var subscription = null;
 
                 subscriptions.forEach(function(s){
@@ -90,6 +142,8 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
                 console.log("Unsubscribing: " + subscription)
 
+                if (!subscription)
+                    return;
                 if (subscription.subscription)
                     subscription.subscription.unsubscribe();
 
@@ -151,30 +205,10 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
         })
 
         $scope.setConversation = function(conversation){
-            console.log(conversation)
             $scope.conversation  = conversation;
-            if (conversation) {
-                $scope.responseBody = $scope.prettyPrint(conversation.response.body)
-                $scope.requestBody = $scope.prettyPrint(conversation.request.body)
-
-            }
         }
 
-        $scope.prettyPrint = function(json){
-            try {
-                return JSON.stringify(JSON.parse(json), null, 2)
-            }catch (e){
-                return json;
-            }
-        }
 
-        $scope.editorOptions = {
-            lineWrapping : true,
-            lineNumbers: true,
-            readOnly: 'nocursor',
-            theme:"dracula",
-            mode: 'text/javascript',
-        };
 
         $scope.$watch("capture",function(){
             $scope.pages =  new Array(Math.ceil($scope.capture.httpInteractions.length/$scope.pageSize));

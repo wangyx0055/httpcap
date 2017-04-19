@@ -27,4 +27,13 @@ public class HttpConversation {
    public String getId() {
       return id;
    }
+
+   @Override
+   public String toString() {
+      return "HttpConversation{" +
+            "id='" + id + '\'' +
+            ", request=" + request.getMethod() + " " + request.getPath() +
+            ", response=" + response.getStatus() +
+            '}';
+   }
 }

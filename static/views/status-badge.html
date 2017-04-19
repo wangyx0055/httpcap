@@ -1,0 +1,7 @@
+
+<div class="label label-success"    ng-if="status >= 200 && status < 300">{{status}}</div>
+<div class="label label-info"       ng-if="status >= 300 && status < 400">{{status}}</div>
+<div class="label label-warning"    ng-if="status >= 400 && status < 500">{{status}}</div>
+<div class="label label-danger"     ng-if="status >= 500 && status < 600">{{status}}</div>
+<div class="label label-default"    ng-if="status >= 600 || status < 200">{{status}}</div>
+

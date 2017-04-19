@@ -1,19 +1,17 @@
-package com.ws.httpcap.model;
+package com.ws.httpcap.model.http;
 
 import org.apache.http.HttpRequest;
-
-import java.sql.Timestamp;
 
 /**
  * Created by wschick on 3/22/17.
  */
-public class RequestHolder implements MessageHolder {
+public class HttpTimedRequest implements HttpTimedMessage {
 
-   private final Long sequence;
+   private final Long timestamp;
    private final HttpRequest httpRequest;
 
-   public RequestHolder(long sequence, HttpRequest httpRequest) {
-      this.sequence = sequence;
+   public HttpTimedRequest(long timestamp, HttpRequest httpRequest) {
+      this.timestamp = timestamp;
       this.httpRequest = httpRequest;
    }
 
@@ -21,14 +19,14 @@ public class RequestHolder implements MessageHolder {
       return httpRequest;
    }
 
-   public Long getSequence() {
-      return sequence;
+   public Long getTimestamp() {
+      return timestamp;
    }
 
    @Override
    public String toString() {
-      return "RequestHolder{" +
-            "sequence=" + sequence +
+      return "HttpTimedRequest{" +
+            "timestamp=" + timestamp +
             ", httpRequest=" + httpRequest.getRequestLine() +
             '}';
    }

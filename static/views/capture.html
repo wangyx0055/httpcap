@@ -25,14 +25,10 @@
         <tr ng-repeat="c in capture.httpInteractions | startFrom: 10*currentPage | limitTo: 10"
             ng-click="setConversation(c)" ng-class="{info:c == conversation}">
             <td>
-                <div class="http-badge method-{{c.request.method}}">
-                    {{c.request.method}}
-                </div>
+                <ng-include src="'views/method-badge.html'" ng-init="method = c.request.method"></ng-include>
             </td>
             <td>
-                <div class="http-badge response-{{c.response.status}}">
-                    {{c.response.status}}
-                </div>
+                <ng-include src="'views/status-badge.html'" ng-init="status = c.response.status"></ng-include>
             </td>
             <td>{{c.request.path}}</td>
         </tr>

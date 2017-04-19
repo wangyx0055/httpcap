@@ -1,5 +1,6 @@
 package com.ws.httpcap.capture;
 
+import com.ws.httpcap.CaptureNotificationService;
 import com.ws.httpcap.api.*;
 import com.ws.httpcap.model.http.HttpInteraction;
 import com.ws.httpcap.model.http.HttpMessageBuffer;
@@ -11,7 +12,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -34,14 +35,14 @@ public class CaptureProcessingTask extends Thread {
    private final BlockingQueue<TimedPacket> packetQueue;
    private final TcpStreamArray streamArray;
    private final HttpMessageBuffer httpMessageBuffer;
+   private final CaptureNotificationService captureNotificationService;
 
-   SimpMessageSendingOperations messageSendingOps;
 
    private volatile boolean running;
 
-   public CaptureProcessingTask(PacketCapture packetCapture, BlockingQueue<TimedPacket> packetQueue, SimpMessageSendingOperations messageSendingOperations) {
+   public CaptureProcessingTask(PacketCapture packetCapture, BlockingQueue<TimedPacket> packetQueue, CaptureNotificationService captureNotificationService) {
 
-      this.messageSendingOps = messageSendingOperations;
+      this.captureNotificationService = captureNotificationService;
 
       this.running = true;
       this.streamArray = new TcpStreamArray(packetCapture.getPort());
@@ -62,7 +63,7 @@ public class CaptureProcessingTask extends Thread {
          try {
             TimedPacket packet = packetQueue.take();
 
-            logger.info("Processing packet: " + packet);
+            logger.fine("Processing packet: " + packet);
 
             TcpPacketWrapper tcpPacketWrapper = new TcpPacketWrapperImpl(packet.packet, packet.timestamp);
 
@@ -77,29 +78,29 @@ public class CaptureProcessingTask extends Thread {
                ArrayList<NameValuePair> requestHeaders = new ArrayList<>();
                ArrayList<NameValuePair> responseHeaders = new ArrayList<>();
 
-               for (Header header : httpInteraction.getRequestHolder().getHttpRequest().getAllHeaders()) {
+               for (Header header : httpInteraction.getHttpTimedRequest().getHttpRequest().getAllHeaders()) {
                   requestHeaders.add(new NameValuePair(header.getName(), header.getValue()));
                }
 
-               for (Header header : httpInteraction.getResponseHolder().getHttpResponse().getAllHeaders()) {
+               for (Header header : httpInteraction.getHttpTimedResponse().getHttpResponse().getAllHeaders()) {
                   responseHeaders.add(new NameValuePair(header.getName(), header.getValue()));
                }
 
                try {
-                  URI requestURI = new URI(httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getUri());
+                  URI requestURI = new URI(httpInteraction.getHttpTimedRequest().getHttpRequest().getRequestLine().getUri());
 
                   String body = null;
 
-                  if (httpInteraction.getRequestHolder().getHttpRequest() instanceof BasicHttpEntityEnclosingRequest){
+                  if (httpInteraction.getHttpTimedRequest().getHttpRequest() instanceof BasicHttpEntityEnclosingRequest){
                      body = read((
                            (BasicHttpEntityEnclosingRequest)
-                                 httpInteraction.getRequestHolder().getHttpRequest()).getEntity()
+                                 httpInteraction.getHttpTimedRequest().getHttpRequest()).getEntity()
                      );
                   }
 
 
                   HttpConversationRequest request = new HttpConversationRequest(
-                        httpInteraction.getRequestHolder().getHttpRequest().getRequestLine().getMethod(),
+                        httpInteraction.getHttpTimedRequest().getHttpRequest().getRequestLine().getMethod(),
                         requestURI.getPath(),
                         URLEncodedUtils.parse(requestURI, "UTF-8").stream().map(p -> new NameValuePair(p.getName(), p.getValue())).collect(Collectors.toList()),
                         requestHeaders,
@@ -107,18 +108,16 @@ public class CaptureProcessingTask extends Thread {
                   );
 
                   HttpConversationResponse reponse = new HttpConversationResponse(
-                        httpInteraction.getResponseHolder().getHttpResponse().getStatusLine().getStatusCode(),
+                        httpInteraction.getHttpTimedResponse().getHttpResponse().getStatusLine().getStatusCode(),
                         responseHeaders,
-                        read(httpInteraction.getResponseHolder().getHttpResponse().getEntity())
+                        read(httpInteraction.getHttpTimedResponse().getHttpResponse().getEntity())
                   );
-
-                  logger.info("Parsed HTTP conversation: ");
-
 
                   HttpConversation httpConversation = new HttpConversation(UUID.randomUUID().toString(), request, reponse);
 
-                  messageSendingOps.convertAndSend("/capture/" + packetCapture.getId(),httpConversation);
+                  logger.info("Parsed HTTP conversation: " + httpConversation );
 
+                  captureNotificationService.notifyNewInteraction(packetCapture.getId(),httpConversation);
 
                   return httpConversation;
                } catch (Exception e) {
@@ -131,9 +130,7 @@ public class CaptureProcessingTask extends Thread {
          } catch (InterruptedException e){
             break;
          } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("EOF");
-            break;
+            logger.log(Level.SEVERE,"Error processing",e);
          }
       }
 
