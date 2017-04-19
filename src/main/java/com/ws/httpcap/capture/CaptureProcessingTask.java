@@ -98,7 +98,6 @@ public class CaptureProcessingTask extends Thread {
                      );
                   }
 
-
                   HttpConversationRequest request = new HttpConversationRequest(
                         httpInteraction.getHttpTimedRequest().getHttpRequest().getRequestLine().getMethod(),
                         requestURI.getPath(),
