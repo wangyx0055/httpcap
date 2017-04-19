@@ -78,6 +78,10 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
+                            <div class="alert alert-danger" ng-if="possiblePermissionError">
+                                No network interfaces found. You may need to grant access to packet capture to the user
+                                running this application.
+                            </div>
                             <label>Network Interfaces</label>
                             <select class="form-control"
                                     ng-options="item.name as item.description for item in interfaces"

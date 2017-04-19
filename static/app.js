@@ -154,7 +154,11 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
     .controller("MainController",["$scope","PacketCapture","Interface", function($scope,PacketCapture,Interface){
 
-        $scope.interfaces = Interface.query();
+        $scope.interfaces = Interface.query(function(ifs){
+            if (ifs.length == 0){
+                $scope.possiblePermissionError = true
+            }
+        });
         $scope.captures = PacketCapture.query();
 
         $scope.formData = {}
