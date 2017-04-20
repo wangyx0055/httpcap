@@ -19,14 +19,45 @@
             Running Captures
         </div>
         <ul class="list-group">
-            <li class="list-group-item clearfix" ng-repeat="capture in captures">
-                <a href="#!/capture/{{capture.id}}">Capturing from {{capture.interfaces.join(", ")}} on port:
-                    {{capture.port}}</a>
-                <div class="btn-group pull-right" role="group" aria-label="...">\
-                    <a class="btn btn-warning" ng-click="stopCapture(capture)" ng-if="capture.running"><span class="glyphicon glyphicon-stop"></span> Stop</a>
-                    <a class="btn btn-danger" ng-click="deleteCapture(capture)" ng-if="!capture.running"><span class="glyphicon glyphicon-remove"></span> Remove</a>
+            <a href="#!/capture/{{capture.id}}" class="list-group-item clearfix" ng-repeat="capture in captures">
+
+                <div class="row">
+                    <div class="col-sm-3">
+                        Port
+                    </div>
+                    <div class="col-sm-6">
+                        Interfaces
+                    </div>
+                    <div class="col-sm-3">
+
+                    </div>
+
                 </div>
-            </li>
+                <div class="row" >
+                    <div class="col-sm-3">
+                        <h3 style="margin-top: 10px">{{capture.port}}</h3>
+                    </div>
+                    <div class="col-sm-6">
+
+                        <div style="margin-top: 10px">
+                        <span ng-repeat="i in capture.interfaces" >
+                            <span class="label label-default" >{{i}}</span>
+                        </span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <form>
+                            <div class="btn-group pull-right" role="group" aria-label="...">
+                                <button class="btn btn-warning" ng-click="$event.preventDefault(); $event.stopPropagation();stopCapture(capture)" ng-if="capture.running"><span class="glyphicon glyphicon-stop"></span> Stop</button>
+                                <button class="btn btn-danger" ng-click="$event.preventDefault(); $event.stopPropagation();deleteCapture(capture)" ng-if="!capture.running"><span class="glyphicon glyphicon-remove"></span> Remove</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+
+            </a>
             <li class="list-group-item list-group-item-info" ng-if="!captures.length">
                 No captures are running on this machine right now.
             </li>
@@ -43,6 +74,19 @@
         </div>
         <div class="panel-body clearfix">
             <form>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <div class="alert alert-danger" ng-if="possiblePermissionError">
+                            No network interfaces found. You may need to grant access to packet capture to the user
+                            running this application.
+                        </div>
+                        <label>Network Interfaces</label>
+
+                        <div class="checkbox" ng-repeat="interface in interfaces">
+                            <label><input type="checkbox" ng-model="checkboxes[interface.name]"><strong>{{interface.name}}</strong> {{interface.description}}</label>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col-md-6">
@@ -59,26 +103,13 @@
                                 <option value="1024">1 MB</option>
                                 <option value="2048">2 MB</option>
                                 <option value="4096">4 MB</option>
-                                <option value="1024">8 MB</option>
-                                <option value="1024">16 MB</option>
+                                <option value="8192">8 MB</option>
+                                <option value="16384">16 MB</option>
                             </select>
                             <small class="help-block">This is the PCAP buffer size used.</small>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="alert alert-danger" ng-if="possiblePermissionError">
-                                No network interfaces found. You may need to grant access to packet capture to the user
-                                running this application.
-                            </div>
-                            <label>Network Interfaces</label>
-                            <select class="form-control"
-                                    ng-options="item.name as item.description for item in interfaces"
-                                    ng-model="formData.interfaces" multiple size="12"></select>
-                            <small id="emailHelp" class="help-block">Capturing on: {{formData.interfaces.join(", ")}}
-                            </small>
-                        </div>
-                    </div>
+
 
                 </div>
 

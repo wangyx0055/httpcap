@@ -9,7 +9,11 @@
                     Home</a>
             </div>
         </div>
-        <h4>Capturing from {{capture.interfaces.join(", ")}} on port: {{capture.port}}</h4>
+        <h4>Port: <strong>{{capture.port}}</strong>
+            <span ng-repeat="i in capture.interfaces" >
+                            <span class="label label-default" style="margin-top: 10px">{{i}}</span>
+                        </span>
+        </h4>
     </div>
 
 
@@ -31,6 +35,9 @@
                 <ng-include src="'views/status-badge.html'" ng-init="status = c.response.status"></ng-include>
             </td>
             <td>{{c.request.path}}</td>
+        </tr>
+        <tr class="" ng-if="!capture.httpInteractions.length">
+            <td class="text-center" colspan="3">Nothing captured yet</td>
         </tr>
         </tbody>
     </table>

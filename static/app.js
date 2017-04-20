@@ -161,7 +161,11 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
         });
         $scope.captures = PacketCapture.query();
 
-        $scope.formData = {}
+        $scope.formData = {
+            bufferSize : "8192"
+        }
+
+        $scope.checkboxes = {}
 
         $scope.createCapture = function(input){
             new PacketCapture(input).$save(function(){
@@ -182,6 +186,19 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
                 $scope.captures = PacketCapture.query();
             })
         }
+
+        $scope.$watch("checkboxes",function(checkboxes){
+
+            var interfaces = []
+
+            for (var i in checkboxes){
+                if (checkboxes[i])
+                    interfaces.push(i)
+            }
+
+            $scope.formData.interfaces = interfaces;
+
+        },true)
 
     }])
 
