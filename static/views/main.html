@@ -41,7 +41,7 @@
 
                         <div style="margin-top: 10px">
                         <span ng-repeat="i in capture.interfaces" >
-                            <span class="label label-default" >{{i}}</span>
+                            <span class="label label-primary" >{{i}}</span>
                         </span>
                         </div>
                     </div>
@@ -55,8 +55,6 @@
                     </div>
 
                 </div>
-
-
             </a>
             <li class="list-group-item list-group-item-info" ng-if="!captures.length">
                 No captures are running on this machine right now.
@@ -73,7 +71,10 @@
             Start a new capture
         </div>
         <div class="panel-body clearfix">
-            <form>
+            <div class="text-center" ng-if="!formData">
+                <button class="btn btn-info" ng-click="createFormData()"><span class="glyphicon glyphicon-plus"></span> New</button>
+            </div>
+            <form ng-if="formData">
                 <div class="col-md-6">
                     <div class="form-group">
                         <div class="alert alert-danger" ng-if="possiblePermissionError">
@@ -92,7 +93,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Port</label>
-                            <input type="number" class="form-control" ng-model="formData.port"/>
+                            <input type="number" class="form-control" ng-model="formData.port" required/>
                             <small class="help-block">The server port to capture traffic from.</small>
                         </div>
 
@@ -109,12 +110,17 @@
                             <small class="help-block">This is the PCAP buffer size used.</small>
                         </div>
                     </div>
-
-
                 </div>
 
+                <div class="pull-right">
+                    <a class="btn btn-warning" ng-click="cancelCapture()">Cancel</a>
 
-                <button class="btn btn-success btn-lg pull-right" ng-click="createCapture(formData)">Start it!</button>
+                    <button type="submit"
+                            class="btn btn-success"
+                            ng-disabled="!formData.interfaces.length || ! formData.port"
+                            ng-click="createCapture(formData)"><span class="glyphicon glyphicon-play"></span> Start</button>
+                </div>
+
             </form>
         </div>
 

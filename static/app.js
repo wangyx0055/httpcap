@@ -15,6 +15,9 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
     .factory("PacketCapture",["$resource",function($resource){
         return $resource("/capture/:id",{id:"@id"}, {'update': { method:'PUT' }})
     }])
+    .factory("PacketCaptureStatus",["$resource",function($resource){
+        return $resource("/capture/:id/status",{id:"@id"})
+    }])
     .factory("Interface",["$resource",function($resource){
         return $resource("/interface/:id")
     }])
@@ -152,7 +155,7 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
         }
     }])
 
-    .controller("MainController",["$scope","PacketCapture","Interface", function($scope,PacketCapture,Interface){
+    .controller("MainController",["$scope","PacketCapture","Interface","PacketCaptureStatus", function($scope,PacketCapture,Interface,PacketCaptureStatus){
 
         $scope.interfaces = Interface.query(function(ifs){
             if (ifs.length == 0){
@@ -161,22 +164,29 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
         });
         $scope.captures = PacketCapture.query();
 
-        $scope.formData = {
-            bufferSize : "8192"
-        }
+
+
+        $scope.createFormData = function(){
+            $scope.formData = {
+                bufferSize : "8192"
+            }
+        };
 
         $scope.checkboxes = {}
 
         $scope.createCapture = function(input){
             new PacketCapture(input).$save(function(){
-                $scope.formData = {}
+                $scope.formData = null;
                 $scope.captures = PacketCapture.query();
             })
         }
 
+        $scope.cancelCapture = function(){
+            $scope.formData = null;
+        }
+
         $scope.stopCapture = function(capture){
-            capture.running = false;
-            capture.$update(function(){
+            PacketCaptureStatus.delete({id:capture.id},function(){
                 $scope.captures = PacketCapture.query();
             })
         }

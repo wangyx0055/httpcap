@@ -46,15 +46,17 @@ public class PacketCaptureController {
 
    }
 
-   @RequestMapping(path = "/capture/{captureId}", method = RequestMethod.PUT)
-   PacketCapture stopCapture(@PathVariable("captureId") int captureId,@RequestBody PacketCapture capture){
+   @RequestMapping(path = "/capture/{captureId}/status", method = RequestMethod.DELETE)
+   boolean stopCapture(@PathVariable("captureId") int captureId){
 
-      if (!capture.isRunning()) {
+      PacketCapture capture = packetCaptureService.getCapture(captureId);
+
+      if (capture.isRunning()) {
          packetCaptureService.stopCapture(captureId);
          packetCaptureService.getCapture(captureId).setRunning(false);
       }
 
-      return capture;
+      return false;
    }
 
    @RequestMapping(path = "/capture/{captureId}", method = RequestMethod.DELETE)
