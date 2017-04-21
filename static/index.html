@@ -2,26 +2,31 @@
 <html>
     <head>
 
-        <script src="public/lib/jquery/dist/jquery.min.js"></script>
-
-
+        <!-- non-angular libraries -->
+        <script type="text/javascript" src="public/lib/jquery/dist/jquery.min.js"></script>
         <script type="text/javascript" src="public/lib/codemirror/lib/codemirror.js"></script>
         <script type="text/javascript" src="public/lib/codemirror/mode/javascript/javascript.js"></script>
         <script type="text/javascript" src="public/lib/codemirror/mode/xml/xml.js"></script>
         <script type="text/javascript" src="public/lib/codemirror/mode/css/css.js"></script>
         <script type="text/javascript" src="public/lib/moment/min/moment.min.js"></script>
-        <script src="public/lib/sockjs-client/dist/sockjs.min.js"></script>
-        <script src="public/lib/stomp-websocket/lib/stomp.min.js"></script>
+        <script type="text/javascript" src="public/lib/sockjs-client/dist/sockjs.min.js"></script>
+        <script type="text/javascript" src="public/lib/stomp-websocket/lib/stomp.min.js"></script>
+        <script type="text/javascript" src="public/lib/bootstrap/dist/js/bootstrap.min.js"></script>
 
-        <script src="public/lib/angular/angular.min.js"></script>
-        <script src="public/lib/angular-resource/angular-resource.min.js"></script>
-        <script src="public/lib/angular-moment/angular-moment.min.js"></script>
-        <script src="public/lib/angular-route/angular-route.min.js"></script>
+        <!--angular libraries -->
+        <script type="text/javascript" src="public/lib/angular/angular.min.js"></script>
+        <script type="text/javascript" src="public/lib/angular-resource/angular-resource.min.js"></script>
+        <script type="text/javascript" src="public/lib/angular-moment/angular-moment.min.js"></script>
+        <script type="text/javascript" src="public/lib/angular-route/angular-route.min.js"></script>
         <script type="text/javascript" src="public/lib/angular-ui-codemirror/ui-codemirror.js"></script>
-        <script src="public/lib/bootstrap/dist/js/bootstrap.min.js"></script>
 
-
-        <script src="app.js"></script>
+        <!-- application source -->
+        <script type="text/javascript" src="app.js"></script>
+        <script type="text/javascript" src="app/capture-list-controller.js"></script>
+        <script type="text/javascript" src="app/content-window.js"></script>
+        <script type="text/javascript" src="app/conversation-listener.js"></script>
+        <script type="text/javascript" src="app/main-controller.js"></script>
+        <script type="text/javascript" src="app/packet-list-controller.js"></script>
 
         <link rel="stylesheet" href="public/lib/bootstrap/dist/css/theme.min.css">
         <link rel="stylesheet" type="text/css" href="public/lib/codemirror/lib/codemirror.css">
@@ -30,63 +35,30 @@
         <style>
             .body-pad { padding-top: 70px; }
 
-
-            .http-badge {
-                background-color: lightgray;
-                color: white;
-                border-radius: 2px;
-                padding: 2px 4px 1px 4px;
-                margin: 2px;
-                display: inline-block;
-                font-size: 10px;
-            }
-
-            .method-GET {
-                background-color: #1d950a;
-            }
-
-            .method-PUT {
-                background-color: #2d949c;
-            }
-
-            .method-POST {
-                background-color: #999c23;
-            }
-
-            .response-200 {
-                background-color: #1d950a;
-            }
-
             .CodeMirror {
                 font-size: 10px;
                 height: 250px;
             }
-
-
-
         </style>
 
     </head>
     <body ng-app="schicwp.httpcap" class="body-pad" >
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <!--a class="navbar-brand" href="#"> <img src="images/cap.png" width="20" height="20"> </a-->
-                <a class="navbar-brand" href="#"> HttpCap</a>
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#"> HttpCap</a>
+                </div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Captures <span class="caret"></span></a>
+                        <ul class="dropdown-menu" ng-controller="CaptureListController">
+                            <li ng-repeat="capture in captures"><a href="#!/capture/{{capture.id}}">Port {{capture.port}}</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">Home</a></li>
+                </ul>
             </div>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Captures <span class="caret"></span></a>
-                    <ul class="dropdown-menu" ng-controller="CaptureListController">
-                        <li ng-repeat="capture in captures"><a href="#!/capture/{{capture.id}}">Port {{capture.port}}</a></li>
-
-                    </ul>
-                </li>
-                <li><a href="#">Home</a></li>
-            </ul>
-        </div>
-    </nav>
-
+        </nav>
         <div class="container container-fluid">
             <ng-view></ng-view>
 
