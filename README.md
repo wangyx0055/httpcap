@@ -30,4 +30,16 @@ sudo ./gradlew run
 ```
 ## Implementation
 
+The packet capture implementation is build off of [pcap4j](https://github.com/kaitoy/pcap4j).
+
+HTTP parsing is implemented by frankenstein-ing various pieces of the
+[apache http client](https://hc.apache.org/httpcomponents-client-ga/).
+
+The application can be controlled and queried over REST endpoints which are implemented using SpringMVC. The application
+itself runs standalone as a Spring Boot application.
+
+Push notifications (for newly captured messages) are sent via STOMP over websockets.
+
+The UI is implemented in angularjs 1.x. Various frontend modules are used (eg codemirror for content rendering).
+
 
