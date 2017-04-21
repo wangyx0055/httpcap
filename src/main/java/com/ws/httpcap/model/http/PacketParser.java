@@ -15,7 +15,7 @@ public class PacketParser {
    private static Logger logger = Logger.getLogger("HttpParser");
 
    public interface ParseFunction<T>{
-      T parse(Buffer buffer, Long timestamp) throws Exception;
+      T parse(Buffer buffer, Long timestamp,TcpPacketWrapper lastPacket) throws Exception;
    }
 
    public  <T> List<T> parsePacketsToMessages(List<TcpPacketWrapper> packets, ParseFunction<T> parseFunction) {
@@ -39,7 +39,7 @@ public class PacketParser {
          Buffer buffer = new Buffer(bytes);
 
          try {
-            result.add(parseFunction.parse(buffer,timestamp));
+            result.add(parseFunction.parse(buffer,timestamp,tcpPacketWrapper));
          } catch (Exception e) {
             logger.fine("Error parsing, waiting for more data. " + e);
             continue;

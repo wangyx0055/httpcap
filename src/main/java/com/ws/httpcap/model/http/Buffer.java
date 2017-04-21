@@ -43,7 +43,8 @@ public class Buffer extends ByteArrayInputStream implements SessionInputBuffer {
 
          if (asString(bytes).endsWith("\r\n")){
             String s = asString(bytes);
-            return s.substring(0, s.length()-2);
+
+            return s.substring(0, s.length() - 2);
          }
       }
 

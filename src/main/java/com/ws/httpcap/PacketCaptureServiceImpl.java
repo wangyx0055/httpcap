@@ -45,6 +45,11 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
    private final ConcurrentHashMap<Integer,PacketCapture> captures = new ConcurrentHashMap<>();
    private int currentId = 0;
    private final Map<Integer,CaptureState> captureStates = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<Integer,List<HttpConversation>> conversationMap = new ConcurrentHashMap<>();
+
+
+
+   public List<NetworkInterface> networkInterfaces = null;
 
    @Autowired
    CaptureNotificationService captureNotificationService;
@@ -64,6 +69,8 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
 
          captureStates.put(packetCapture.getId(),new CaptureState());
 
+         List<HttpConversation> conversations = Collections.synchronizedList(new ArrayList<>());
+
 
          BlockingQueue<TimedPacket> packetQueue = new ArrayBlockingQueue<TimedPacket>(1000);
 
@@ -73,9 +80,15 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
 
                logger.info("Starting collection on iface: " + networkInterface + " port: " + packetCapture.getPort());
 
-               PcapNetworkInterface pcapNetworkInterface = Pcaps.getDevByName(networkInterface);
+               logger.info("Using buffer size: " + packetCapture.getBufferSize() + "K");
 
-               PcapHandle handle = pcapNetworkInterface.openLive(80000, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 1000);
+
+               PcapHandle handle = new PcapHandle.Builder(networkInterface)
+                     .snaplen(8000000)
+                     .promiscuousMode(PcapNetworkInterface.PromiscuousMode.PROMISCUOUS)
+                     .timeoutMillis(1000)
+                     .bufferSize(packetCapture.getBufferSize()* 1024)
+                     .timestampPrecision(PcapHandle.TimestampPrecision.MICRO).build();
 
                handle.setFilter("tcp port " + packetCapture.getPort(), BpfProgram.BpfCompileMode.OPTIMIZE);
 
@@ -91,13 +104,14 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
          });
 
          captureStates.get(packetCapture.getId()).setProcessingThread(
-               new CaptureProcessingTask(packetCapture, packetQueue, captureNotificationService)
+               new CaptureProcessingTask(packetCapture.getPort(),packetCapture.getId(),conversations, packetQueue, captureNotificationService)
                      .startProcessing()
          );
 
          packetCapture.setRunning(true);
 
          captures.put(packetCapture.getId(),packetCapture);
+         conversationMap.put(packetCapture.getId(),conversations);
 
          return packetCapture.getId();
 
@@ -117,34 +131,45 @@ public class PacketCaptureServiceImpl implements PacketCaptureService {
    }
 
    @Override
-   public PacketCapture getCapture(int id) {
+   public synchronized PacketCapture getCapture(int id) {
       return captures.get(id);
    }
 
    @Override
-   public Collection<PacketCapture> getCaptures() {
+   public List<HttpConversation> getConversationsForCapture(int id) {
+      return conversationMap.get(id);
+   }
+
+   @Override
+   public synchronized Collection<PacketCapture> getCaptures() {
       return captures.values();
    }
 
    @Override
-   public void deleteCapture(int captureId) {
+   public synchronized void deleteCapture(int captureId) {
       stopCapture(captureId);
       captures.remove(captureId);
+      conversationMap.remove(captureId);
    }
 
    @Override
-   public List<NetworkInterface> getNetworkInterfaceNames() {
+   public synchronized List<NetworkInterface> getNetworkInterfaceNames() {
 
-      try {
-         return Pcaps.findAllDevs().stream().map(i -> {
-            NetworkInterface networkInterface = new NetworkInterface();
-            networkInterface.setName(i.getName());
-            networkInterface.setDescription(i.getDescription() == null?i.getName():i.getDescription());
-            return networkInterface;
-         }).collect(Collectors.toList());
-      }catch (Exception e){
-         throw new RuntimeException(e);
+
+      if (networkInterfaces == null){
+         try {
+            networkInterfaces = Pcaps.findAllDevs().stream().map(i -> {
+               NetworkInterface networkInterface = new NetworkInterface();
+               networkInterface.setName(i.getName());
+               networkInterface.setDescription(i.getDescription() == null?"":i.getDescription());
+               return networkInterface;
+            }).collect(Collectors.toList());
+         }catch (Exception e){
+            throw new RuntimeException(e);
+         }
       }
+
+      return networkInterfaces;
 
    }
 }

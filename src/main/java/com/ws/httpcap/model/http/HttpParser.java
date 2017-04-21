@@ -24,7 +24,7 @@ public class HttpParser {
 
    public List<HttpTimedResponse> getServerResponses(List<TcpPacketWrapper> packets){
 
-      return packetParser.parsePacketsToMessages(packets,(buffer,timestamp) ->{
+      return packetParser.parsePacketsToMessages(packets,(buffer,timestamp,tcpPacketWrapper) ->{
          DefaultHttpResponseParser parser = new DefaultHttpResponseParser(buffer);
 
          HttpResponse httpResponse = parser.parse();
@@ -46,12 +46,17 @@ public class HttpParser {
          ));
          httpParserUtil.validateContent(httpResponse);
 
-         return  new HttpTimedResponse(timestamp, httpResponse);
+         return  new HttpTimedResponse(timestamp, httpResponse,
+               tcpPacketWrapper.getSrcAddr().getHostAddress(),
+               tcpPacketWrapper.getSrcPort(),
+               tcpPacketWrapper.getDstAddr().getHostAddress(),
+               tcpPacketWrapper.getDstPort()
+         );
       });
    }
 
    public List<HttpTimedRequest> getClientRequests(List<TcpPacketWrapper> packets){
-      return packetParser.parsePacketsToMessages(packets,(buffer,timestamp) ->{
+      return packetParser.parsePacketsToMessages(packets,(buffer,timestamp,tcpPacketWrapper) ->{
          DefaultHttpRequestParser parser = new DefaultHttpRequestParser(
                buffer
          );
@@ -77,7 +82,12 @@ public class HttpParser {
             ));
          }
 
-         return new HttpTimedRequest(timestamp, httpRequest);
+         return new HttpTimedRequest(timestamp, httpRequest,
+               tcpPacketWrapper.getSrcAddr().getHostAddress(),
+               tcpPacketWrapper.getSrcPort(),
+               tcpPacketWrapper.getDstAddr().getHostAddress(),
+               tcpPacketWrapper.getDstPort()
+         );
       });
    }
 

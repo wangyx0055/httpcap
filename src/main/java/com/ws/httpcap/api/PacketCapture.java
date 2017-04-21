@@ -12,10 +12,9 @@ public class PacketCapture {
     int id;
     int port;
     List<String> interfaces = new ArrayList<>();
+    int bufferSize;
 
     boolean running;
-
-    Collection<HttpConversation> httpInteractions  = new ArrayList<>();
 
     public int getPort() {
         return port;
@@ -23,14 +22,6 @@ public class PacketCapture {
 
     public void setPort(int port) {
         this.port = port;
-    }
-
-    public Collection<HttpConversation> getHttpInteractions() {
-        return httpInteractions;
-    }
-
-    public void setHttpInteractions(Collection<HttpConversation> httpInteractions) {
-        this.httpInteractions = httpInteractions;
     }
 
     public int getId() {
@@ -55,6 +46,14 @@ public class PacketCapture {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
     }
 }
 

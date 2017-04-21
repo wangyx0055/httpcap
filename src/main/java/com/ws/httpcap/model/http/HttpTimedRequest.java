@@ -9,10 +9,18 @@ public class HttpTimedRequest implements HttpTimedMessage {
 
    private final Long timestamp;
    private final HttpRequest httpRequest;
+   private final String srcHost;
+   private final int   srcPort;
+   private final String dstHost;
+   private final int  dstPort;
 
-   public HttpTimedRequest(long timestamp, HttpRequest httpRequest) {
+   public HttpTimedRequest(long timestamp, HttpRequest httpRequest, String srcHost, int srcPort, String dstHost, int dstPort) {
       this.timestamp = timestamp;
       this.httpRequest = httpRequest;
+      this.srcHost = srcHost;
+      this.srcPort = srcPort;
+      this.dstHost = dstHost;
+      this.dstPort = dstPort;
    }
 
    public HttpRequest getHttpRequest() {
@@ -21,6 +29,26 @@ public class HttpTimedRequest implements HttpTimedMessage {
 
    public Long getTimestamp() {
       return timestamp;
+   }
+
+   @Override
+   public String getSrcHost() {
+      return srcHost;
+   }
+
+   @Override
+   public String getDstHost() {
+      return dstHost;
+   }
+
+   @Override
+   public int getSrcPort() {
+      return srcPort;
+   }
+
+   @Override
+   public int getDstPort() {
+      return dstPort;
    }
 
    @Override

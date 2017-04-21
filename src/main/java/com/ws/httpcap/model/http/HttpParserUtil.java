@@ -19,6 +19,7 @@ import java.io.InputStream;
 public class HttpParserUtil {
 
    public HttpEntity extractHttpEntity(Buffer buffer, HttpMessage parse) throws HttpException, IOException {
+
       EntityDeserializer entityDeserializer = new EntityDeserializer(new StrictContentLengthStrategy());
 
       return entityDeserializer.deserialize(buffer, parse);
@@ -36,18 +37,19 @@ public class HttpParserUtil {
    public void validateContent(HttpResponse parse) {
       if (parse.getEntity().getContentLength() == 0 &&
             ( parse.getHeaders("Content-Length").length > 0 || parse.getHeaders("Transfer-Encoding").length > 0) &&
-            Integer.valueOf(parse.getFirstHeader("Content-Length").getValue()) != 0)
+            Integer.valueOf(parse.getFirstHeader("Content-Length").getValue()) != 0) {
          throw new RuntimeException("Invalid content");
+      }
    }
 
 
    public byte[] readAll(InputStream inputStream) throws IOException{
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-      int b;
+      byte[] bytes = new byte[1];
 
-      while ((b = inputStream.read()) != -1){
-         byteArrayOutputStream.write(b);
+      while (inputStream.read(bytes) != -1){
+         byteArrayOutputStream.write(bytes[0]);
       }
 
       return byteArrayOutputStream.toByteArray();

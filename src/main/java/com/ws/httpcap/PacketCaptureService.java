@@ -1,5 +1,6 @@
 package com.ws.httpcap;
 
+import com.ws.httpcap.api.HttpConversation;
 import com.ws.httpcap.api.NetworkInterface;
 import com.ws.httpcap.api.PacketCapture;
 
@@ -17,6 +18,8 @@ public interface PacketCaptureService {
     void stopCapture(int id);
 
     PacketCapture getCapture(int id);
+
+    List<HttpConversation> getConversationsForCapture(int id);
 
     Collection<PacketCapture> getCaptures();
 

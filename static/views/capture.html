@@ -44,14 +44,14 @@
 
     <ul class="pagination ">
         <li>
-            <a ng-click="currentPage= currentPage -1" aria-label="Previous">
+            <a ng-click="previousPage()" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
         <li ng-repeat="i in pages track by $index" ng-class="{'active':currentPage == $index}"><a
                 ng-click="setPage($index)">{{ $index + 1 }}</a></li>
         <li>
-            <a ng-click="currentPage= 1 + currentPage" aria-label="Next">
+            <a ng-click="nextPage()" ng-disabled="currentPage >= pages.length -1" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>

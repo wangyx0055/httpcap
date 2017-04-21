@@ -10,5 +10,13 @@ public interface HttpTimedMessage {
 
    Long getTimestamp();
 
+   String getSrcHost();
+
+   String getDstHost();
+
+   int getSrcPort();
+
+   int getDstPort();
+
 
 }

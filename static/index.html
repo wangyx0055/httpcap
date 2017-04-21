@@ -9,11 +9,13 @@
         <script type="text/javascript" src="public/lib/codemirror/mode/javascript/javascript.js"></script>
         <script type="text/javascript" src="public/lib/codemirror/mode/xml/xml.js"></script>
         <script type="text/javascript" src="public/lib/codemirror/mode/css/css.js"></script>
+        <script type="text/javascript" src="public/lib/moment/min/moment.min.js"></script>
         <script src="public/lib/sockjs-client/dist/sockjs.min.js"></script>
         <script src="public/lib/stomp-websocket/lib/stomp.min.js"></script>
 
         <script src="public/lib/angular/angular.min.js"></script>
         <script src="public/lib/angular-resource/angular-resource.min.js"></script>
+        <script src="public/lib/angular-moment/angular-moment.min.js"></script>
         <script src="public/lib/angular-route/angular-route.min.js"></script>
         <script type="text/javascript" src="public/lib/angular-ui-codemirror/ui-codemirror.js"></script>
         <script src="public/lib/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -75,8 +77,8 @@
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Captures <span class="caret"></span></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#!/capture/1">Port 3000</a></li>
+                    <ul class="dropdown-menu" ng-controller="CaptureListController">
+                        <li ng-repeat="capture in captures"><a href="#!/capture/{{capture.id}}">Port {{capture.port}}</a></li>
 
                     </ul>
                 </li>

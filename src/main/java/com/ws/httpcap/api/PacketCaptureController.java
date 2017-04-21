@@ -5,8 +5,11 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,7 +45,21 @@ public class PacketCaptureController {
    @RequestMapping(path = "/capture/{captureId}", method = RequestMethod.GET)
    PacketCapture getPacketCapture(@PathVariable("captureId") int captureId) throws Exception {
 
-      return packetCaptureService.getCapture(captureId);
+
+      PacketCapture capture = packetCaptureService.getCapture(captureId);
+
+      if (capture == null)
+         throw new HttpClientErrorException(HttpStatus.NOT_FOUND);
+      return capture;
+
+
+
+   }
+
+   @RequestMapping(path = "/capture/{captureId}/conversation", method = RequestMethod.GET)
+   List<HttpConversation> getCaptureConversations(@PathVariable("captureId") int captureId) throws Exception {
+
+      return packetCaptureService.getConversationsForCapture(captureId);
 
    }
 

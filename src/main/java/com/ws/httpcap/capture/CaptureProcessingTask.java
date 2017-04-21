@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -31,7 +32,10 @@ import java.util.stream.Collectors;
 public class CaptureProcessingTask extends Thread {
    private static Logger logger = Logger.getLogger("CaptureProcessingTask");
 
-   private final PacketCapture packetCapture;
+   //private final PacketCapture packetCapture;
+   private final int port;
+   private final int captureId;
+   Collection<HttpConversation> output;
    private final BlockingQueue<TimedPacket> packetQueue;
    private final TcpStreamArray streamArray;
    private final HttpMessageBuffer httpMessageBuffer;
@@ -40,24 +44,26 @@ public class CaptureProcessingTask extends Thread {
 
    private volatile boolean running;
 
-   public CaptureProcessingTask(PacketCapture packetCapture, BlockingQueue<TimedPacket> packetQueue, CaptureNotificationService captureNotificationService) {
+   public CaptureProcessingTask(int port, int captureId, Collection<HttpConversation> output, BlockingQueue<TimedPacket> packetQueue, CaptureNotificationService captureNotificationService) {
 
       this.captureNotificationService = captureNotificationService;
 
       this.running = true;
-      this.streamArray = new TcpStreamArray(packetCapture.getPort());
+      this.streamArray = new TcpStreamArray(port);
 
       this.httpMessageBuffer = new HttpMessageBuffer(streamArray,new HttpParser());
 
-      this.packetCapture = packetCapture;
+      this.output = output;
       this.packetQueue = packetQueue;
+      this.port = port;
+      this.captureId = captureId;
 
    }
 
    @Override
    public void run() {
 
-      logger.info("Starting processing thread for capture: " + packetCapture.getId());
+      logger.info("Starting processing thread for capture: " + captureId );
 
       while (running) {
          try {
@@ -73,7 +79,7 @@ public class CaptureProcessingTask extends Thread {
 
             httpInteractions.addAll(httpMessageBuffer.getHttpInteractions());
 
-            packetCapture.getHttpInteractions().addAll(httpInteractions.stream().map(httpInteraction -> {
+            output.addAll(httpInteractions.stream().map(httpInteraction -> {
 
                ArrayList<NameValuePair> requestHeaders = new ArrayList<>();
                ArrayList<NameValuePair> responseHeaders = new ArrayList<>();
@@ -112,11 +118,21 @@ public class CaptureProcessingTask extends Thread {
                         read(httpInteraction.getHttpTimedResponse().getHttpResponse().getEntity())
                   );
 
-                  HttpConversation httpConversation = new HttpConversation(UUID.randomUUID().toString(), request, reponse);
+                  HttpConversation httpConversation = new HttpConversation(
+                        UUID.randomUUID().toString(),
+                        request,
+                        reponse,
+                        httpInteraction.getHttpTimedRequest().getSrcHost(),
+                        httpInteraction.getHttpTimedRequest().getDstHost(),
+                        httpInteraction.getHttpTimedRequest().getSrcPort(),
+                        httpInteraction.getHttpTimedRequest().getDstPort(),
+                        httpInteraction.getHttpTimedRequest().getTimestamp(),
+                        httpInteraction.getHttpTimedResponse().getTimestamp()
+                  );
 
                   logger.info("Parsed HTTP conversation: " + httpConversation );
 
-                  captureNotificationService.notifyNewInteraction(packetCapture.getId(),httpConversation);
+                  captureNotificationService.notifyNewInteraction(captureId,httpConversation);
 
                   return httpConversation;
                } catch (Exception e) {
@@ -133,7 +149,7 @@ public class CaptureProcessingTask extends Thread {
          }
       }
 
-      logger.info("Stopping capture: " + packetCapture.getId());
+      logger.info("Stopping capture: " + captureId);
 
    }
 

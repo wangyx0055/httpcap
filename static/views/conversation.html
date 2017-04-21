@@ -4,7 +4,7 @@
 <div class="panel panel-info">
     <div class="panel-heading clearfix">
 
-        <h4 class="panel-title pull-left" style="padding-top: 7.5px;">{{conversation.request.method}} {{conversation.request.path}} - {{conversation.response.status}} </h4>
+        <h4 class="panel-title pull-left" style="padding-top: 7.5px;">{{conversation.request.method}} {{conversation.request.path}} - Response:{{conversation.response.status}} </h4>
         <div class="btn-group pull-right">
             <a ng-click="setConversation(null)" class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
 
@@ -12,21 +12,53 @@
     </div>
     <div class="panel-body">
         <ul class="nav nav-tabs">
+            <li ng-class="{active: pane == 'general'}"><a ng-click="pane = 'general'">General</a></li>
             <li ng-class="{active: pane == 'request'}"><a ng-click="pane = 'request'">Request</a></li>
             <li ng-class="{active: pane == 'response'}"><a ng-click="pane = 'response'">Response</a></li>
         </ul>
         <br>
         <div class="tab-content">
+            <div ng-if="pane == 'general'" class="tab-pane active">
+
+                <h5>{{conversation.request.method}} {{conversation.request.path}} - Response:{{conversation.response.status}}</h5>
+                <table class="table table-condensed table-striped">
+                    <tr>
+                        <th>Server Host</th>
+                        <td>{{conversation.serverHost}}</td>
+                    </tr>
+                    <tr>
+                        <th>Server Port</th>
+                        <td>{{conversation.serverPort}}</td>
+                    </tr>
+                    <tr>
+                        <th>Client Host</th>
+                        <td>{{conversation.clientHost}}</td>
+                    </tr>
+                    <tr>
+                        <th>Client Port</th>
+                        <td>{{conversation.clientPort}}</td>
+                    </tr>
+                    <tr>
+                        <th>Request Timestamp</th>
+                        <td>{{conversation.requestTimestamp | amCalendar}}</td>
+                    </tr>
+                    <tr>
+                        <th>Response Timestamp</th>
+                        <td>{{conversation.responseTimestamp | amCalendar}}</td>
+                    </tr>
+                    <tr>
+                        <th>Response Time</th>
+                        <td>{{conversation.responseTimestamp - conversation.requestTimestamp}} ms</td>
+                    </tr>
+                </table>
+            </div>
             <div ng-if="pane == 'request'" class="tab-pane active" ng-init="pane = 'headers'">
-
-
                 <ul class="nav nav-pills nav-justified">
                     <li ng-class="{active: pane == 'headers'}"><a ng-click="pane = 'headers'">Headers</a></li>
                     <li ng-class="{active: pane == 'parameters'}"><a ng-click="pane = 'parameters'">Parameters</a></li>
                     <li ng-class="{active: pane == 'content'}"><a ng-click="pane = 'content'">Content</a></li>
                 </ul>
                 <br>
-
                 <table ng-if="pane == 'headers'" class="table table-condensed">
                     <tr ng-repeat="header in conversation.request.headers" style="word-wrap: break-word">
                         <td class="col-sm-4"><small><strong>{{header.name}}</strong></small></td>
@@ -46,11 +78,9 @@
                     </table>
 
                 </div>
-
                 <div ng-if="pane == 'content'">
                     <content-window message="conversation.request"></content-window>
                 </div>
-
             </div>
             <div ng-if="pane == 'response'" class="tab-pane active" ng-init="pane = 'headers'">
 
@@ -69,7 +99,6 @@
                 <div ng-if="pane == 'content'">
                     <content-window message="conversation.response"></content-window>
                 </div>
-
             </div>
         </div>
 

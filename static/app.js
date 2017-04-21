@@ -1,6 +1,6 @@
 
 
-angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
+angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror','angularMoment'])
     .config(function($routeProvider) {
         $routeProvider
             .when("/", {
@@ -14,6 +14,9 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
     })
     .factory("PacketCapture",["$resource",function($resource){
         return $resource("/capture/:id",{id:"@id"}, {'update': { method:'PUT' }})
+    }])
+    .factory("PacketCaptureConversation",["$resource",function($resource){
+        return $resource("/capture/:captureId/conversation/:id",{id:"@id"})
     }])
     .factory("PacketCaptureStatus",["$resource",function($resource){
         return $resource("/capture/:id/status",{id:"@id"})
@@ -154,6 +157,14 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
             }
         }
     }])
+    .controller("CaptureListController",["$scope","PacketCapture","$interval", function($scope,PacketCapture,$interval){
+        $scope.captures = PacketCapture.query();
+
+        $interval(function(){
+            $scope.captures = PacketCapture.query();
+        },10000);
+
+    }])
 
     .controller("MainController",["$scope","PacketCapture","Interface","PacketCaptureStatus", function($scope,PacketCapture,Interface,PacketCaptureStatus){
 
@@ -212,9 +223,8 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
     }])
 
-    .controller("PacketListController",["$scope","PacketCapture","$routeParams","conversationListener",function($scope,PacketCapture,$routeParams,conversationListener){
-
-
+    .controller("PacketListController",["$scope","PacketCapture","PacketCaptureConversation","$routeParams","conversationListener","$location",
+        function($scope,PacketCapture,PacketCaptureConversation,$routeParams,conversationListener,$location){
 
         $scope.currentPage = 0;
         $scope.pageSize = 10;
@@ -224,16 +234,37 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
         $scope.setPage = function(page){
             $scope.currentPage = page;
-        }
+        };
+
+        $scope.nextPage = function(){
+            $scope.currentPage++;
+
+            if ($scope.currentPage > $scope.pages.length -1)
+                $scope.currentPage = $scope.pages.length -1;
+        };
+
+        $scope.previousPage = function(){
+            $scope.currentPage--;
+
+            if ($scope.currentPage < 0)
+                $scope.currentPage = 0;
+        };
 
         $scope.capture = PacketCapture.get({id:$routeParams.id},function(){
             console.log($scope.capture)
-            $scope.pages =  new Array(Math.ceil($scope.capture.httpInteractions.length/$scope.pageSize));
 
-            conversationListener.subscribe(id,function(item){
-                $scope.capture.httpInteractions.push(item)
+            $scope.capture.httpInteractions = PacketCaptureConversation.query({captureId:$routeParams.id},function(){
+                $scope.pages =  new Array(Math.ceil($scope.capture.httpInteractions.length/$scope.pageSize));
+
+                conversationListener.subscribe(id,function(item){
+                    $scope.capture.httpInteractions.push(item)
+                })
             })
-        })
+
+        },function(){
+            console.log("HI")
+            $location.path("/")
+        });
 
         $scope.setConversation = function(conversation){
             $scope.conversation  = conversation;
@@ -242,7 +273,8 @@ angular.module("schicwp.httpcap",["ngResource","ngRoute",'ui.codemirror'])
 
 
         $scope.$watch("capture",function(){
-            $scope.pages =  new Array(Math.ceil($scope.capture.httpInteractions.length/$scope.pageSize));
+            if ($scope.capture.httpInteractions)
+                $scope.pages =  new Array(Math.ceil($scope.capture.httpInteractions.length/$scope.pageSize));
         },true)
 
         $scope.$on("$destroy",function(){
